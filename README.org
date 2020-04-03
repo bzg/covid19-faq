@@ -1,0 +1,16 @@
+* TODO
+* Contribute
+
+Your help is welcome.  You can contribute with bug reports, pull
+requests or feature requests.
+
+* Support the Clojure(script) ecosystem
+
+If you like Clojure(script), please consider supporting maintainers by
+donating to [[https://www.clojuriststogether.org][clojuriststogether.org]].
+
+* License
+
+2019-2020 DINSIC, Bastien Guerry.
+
+This application is published under the EPL 2.0 license.
