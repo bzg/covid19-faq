@@ -18,7 +18,8 @@
   re-frame                        {:mvn/version "0.12.0"}
   reagent                         {:mvn/version "0.10.0"}
   reagent-utils                   {:mvn/version "0.3.3"}
-  ;; org.clojure/data.csv            {:mvn/version "1.0.0"}
+  cheshire                        {:mvn/version "5.10.0"}
+  org.clojure/data.csv            {:mvn/version "1.0.0"}
   }
 
  :paths ["src" "src/clj" "src/cljc" "resources"]
