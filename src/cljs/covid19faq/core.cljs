@@ -6,8 +6,8 @@
   (:require-macros [covid19faq.macros :refer [inline]])
   (:require [cljs.core.async :as async]
             [cljs.reader]
+            [clojure.string :as s]
             [re-frame.core :as re-frame]
-            [reagent.core :as reagent]
             [reagent.dom]))
 
 (def faq-questions
@@ -49,15 +49,21 @@
   (let [f @(re-frame/subscribe [:filter?])
         q (:q f)
         p (str ".*(" q ").*")]
-    (map
-     #(if (not-empty (:q f))
-        (let [question (:q %)]
-          (when-let [match (re-matches (re-pattern p) question)]
-            (assoc % :q (clojure.string/replace
-                         question (last match)
-                         (str "<b>" (last match) "</b>")))))
-        %)
-     m)))
+    (sort-by
+     :x
+     (map
+      #(if (not-empty (:q f))
+         (let [question (:q %)]
+           (when-let [match (re-matches (re-pattern p) question)]
+             (let [matched (last match)
+                   idx     (s/index-of question matched)]
+               (assoc %
+                      :x idx
+                      :q (s/replace
+                          question (last match)
+                          (str "<b>" (last match) "</b>"))))))
+         %)
+      m))))
 
 (re-frame/reg-sub
  :filtered-faq?
@@ -103,7 +109,7 @@
      [:input.input
       {:size        20
        :placeholder "Recherche"
-       :value       (:q @(re-frame/subscribe [:filter?]))
+       :value       (:q filter)
        :on-change   (fn [e]
                       (re-frame/dispatch [:display-answer! nil])
                       (let [ev (.-value (.-target e))]
