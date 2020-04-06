@@ -10,7 +10,7 @@
             [reagent.core :as reagent]
             [reagent.dom]))
 
-(def faq (cljs.reader/read-string (inline "data/faq.edn")))
+(def faq (cljs.reader/read-string (inline "data/faq-questions.edn")))
 
 (re-frame/reg-event-db
  :initialize-db!
