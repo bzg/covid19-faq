@@ -113,11 +113,13 @@
                         (:query @(re-frame/subscribe [:filter?])))
        :on-change   (fn [e]
                       (re-frame/dispatch [:display-answer! nil])
-                      (let [ev (.-value (.-target e))]
+                      (let [ev      (.-value (.-target e))
+                            ev-size (count ev)]
                         (reset! global-filter {:query ev})
-                        (async/go
-                          (async/<! (async/timeout timeout))
-                          (async/>! filter-chan {:query ev}))))}]
+                        (when (or (= ev-size 0) (> ev-size 2))
+                          (async/go
+                            (async/<! (async/timeout timeout))
+                            (async/>! filter-chan {:query ev})))))}]
      [:br]
      [:br]
      (if answer-id
