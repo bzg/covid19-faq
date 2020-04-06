@@ -1,8 +1,8 @@
 (ns covid19faq.core
-  (:require [cheshire.core :as json]
-            [clojure.data.csv :as csv]
-            [clojure.set]
-            [clojure.java.io :as io]))
+  (:require ;; [cheshire.core :as json]
+             [clojure.data.csv :as csv]
+             [clojure.set]
+             [clojure.java.io :as io]))
 
 (def latest-csv-path "data/sources/2020.04.04_-_FAQ_gouvernement_V5.csv")
 
@@ -19,9 +19,9 @@
 (defn csv-as-map [csv] (rows->maps csv))
 
 (defn -main []
-  (spit "data/faq.json"
-        (json/generate-string
-         (map ;; identity
+  (spit "data/faq.edn"
+        (pr-str
+         (map
           #(clojure.set/rename-keys
             %
             {"﻿Source"      :s
@@ -31,6 +31,3 @@
              "Question"    :q
              "Réponse"     :r})
           (csv-as-map csv)))))
-
-;; (-main)
-
