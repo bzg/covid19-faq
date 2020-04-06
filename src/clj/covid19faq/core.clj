@@ -4,7 +4,7 @@
    [clojure.set]
    [clojure.java.io :as io]))
 
-(def latest-csv-path "data/sources/2020.04.04_-_FAQ_gouvernement_V5.csv")
+(def latest-csv-path "data/sources/2020.04.06_-_FAQ_gouvernement_V7.csv")
 
 (def csv
   (with-open [reader (io/reader latest-csv-path)]
