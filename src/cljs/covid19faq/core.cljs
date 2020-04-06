@@ -8,7 +8,11 @@
             [cljs.reader]
             [clojure.string :as s]
             [re-frame.core :as re-frame]
+            [reagent.core :as reagent]
             [reagent.dom]))
+
+(defonce timeout 100)
+(def global-filter (reagent/atom {:query ""}))
 
 (def faq-questions
   (cljs.reader/read-string (inline "data/faq-questions.edn")))
@@ -22,7 +26,7 @@
    {:questions      faq-questions
     :answers        faq-answers
     :display-answer nil
-    :filter         {:q ""}}))
+    :filter         {:query ""}}))
 
 (re-frame/reg-event-db
  :display-answer!
@@ -31,10 +35,6 @@
 (re-frame/reg-sub
  :display-answer?
  (fn [db _] (:display-answer db)))
-
-(re-frame/reg-sub
- :filter?
- (fn [db _] (:filter db)))
 
 (re-frame/reg-event-db
  :filter!
@@ -47,12 +47,12 @@
 
 (defn apply-filter [m]
   (let [f @(re-frame/subscribe [:filter?])
-        q (:q f)
+        q (:query f)
         p (str ".*(" q ").*")]
     (sort-by
      :x
      (map
-      #(if (not-empty (:q f))
+      #(if (not-empty (:query f))
          (let [question (:q %)]
            (when-let [match (re-matches (re-pattern p) question)]
              (let [matched (last match)
@@ -100,21 +100,24 @@
    [:p (:r a)]
    [:br]
    [:p
-    [:a {:href (str "http://" (:u a))} (:s a)] " - mise à jour du " (:m a) " - " (:c a)]])
+    [:a {:href (str "http://" (:u a))} (:s a)]
+    " - mise à jour du " (:m a) " - " (:c a)]])
 
 (defn main-page []
-  (let [filter    @(re-frame/subscribe [:filter?])
-        answer-id @(re-frame/subscribe [:display-answer?])]
+  (let [answer-id @(re-frame/subscribe [:display-answer?])]
     [:div
      [:input.input
       {:size        20
        :placeholder "Recherche"
-       :value       (:q filter)
+       :value       (or (:query @global-filter)
+                        (:query @(re-frame/subscribe [:filter?])))
        :on-change   (fn [e]
                       (re-frame/dispatch [:display-answer! nil])
                       (let [ev (.-value (.-target e))]
+                        (reset! global-filter {:query ev})
                         (async/go
-                          (async/>! filter-chan {:q ev}))))}]
+                          (async/<! (async/timeout timeout))
+                          (async/>! filter-chan {:query ev}))))}]
      [:br]
      [:br]
      (if answer-id
