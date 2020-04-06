@@ -15,7 +15,6 @@ pom.xml
 .dir-locals.el
 *txt
 .lsp/*
-*json
 *yaml
 data/sources/*csv
 todo.org
