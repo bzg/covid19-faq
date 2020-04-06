@@ -1,8 +1,8 @@
-(ns covid19faq.core
+(ns covid19faq.corese
   (:require ;; [cheshire.core :as json]
-             [clojure.data.csv :as csv]
-             [clojure.set]
-             [clojure.java.io :as io]))
+   [clojure.data.csv :as csv]
+   [clojure.set]
+   [clojure.java.io :as io]))
 
 (def latest-csv-path "data/sources/2020.04.04_-_FAQ_gouvernement_V5.csv")
 
@@ -27,25 +27,25 @@
      {"Id"          :i
       "﻿Source"      :s
       "URL"         :u
+      "Réponse"     :r
       "Mise à jour" :m
       "Catégorie"   :c
-      "Question"    :q
-      "Réponse"     :r})
+      "Question"    :q})
    (rows->maps csv)))
 
 (defn spit-faq-questions []
-  (spit "data/faq-questons.edn"
+  (spit "data/faq-questions.edn"
         (pr-str (map #(select-keys % [:i :q])
                      (csv-as-map csv)))))
 
-(defn spit-faq-reponses []
-  (spit "data/faq-reponses.edn"
-        (pr-str (map #(select-keys % [:i :s :u :r])
+(defn spit-faq-answers []
+  (spit "data/faq-answers.edn"
+        (pr-str (map #(select-keys % [:i :s :u :r :m :c :q])
                      (csv-as-map csv)))))
 
 (defn -main []
   (spit-faq-questions)
-  (spit-faq-reponses))
+  (spit-faq-answers))
 
 ;; (-main)
 

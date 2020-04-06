@@ -10,15 +10,36 @@
             [reagent.core :as reagent]
             [reagent.dom]))
 
-(def faq (cljs.reader/read-string (inline "data/faq-questions.edn")))
+(def faq-questions
+  (cljs.reader/read-string (inline "data/faq-questions.edn")))
+
+(def faq-answers
+  (cljs.reader/read-string (inline "data/faq-answers.edn")))
 
 (re-frame/reg-event-db
  :initialize-db!
- (fn [_ _] {:faq faq :filter {:q ""}}))
+ (fn [_ _]
+   {:questions      faq-questions
+    :answers        faq-answers
+    :display-answer nil
+    :filter         {:q ""}}))
+
+(re-frame/reg-event-db
+ :display-answer!
+ (fn [db [_ b]] (assoc db :display-answer b)))
+
+(re-frame/reg-sub
+ :display-answer?
+ (fn [db _] (:display-answer db)))
+
+(re-frame/reg-sub
+ :filter?
+ (fn [db _] (:filter db)))
 
 (re-frame/reg-event-db
  :filter!
- (fn [db [_ s]] (assoc db :filter (merge (:filter db) s))))
+ ;; FIXME: (merge (:filter db) s) ?
+ (fn [db [_ s]] (assoc db :filter s))) 
 
 (re-frame/reg-sub
  :filter?
@@ -31,7 +52,7 @@
 
 (re-frame/reg-sub
  :filtered-faq?
- (fn [db _] (apply-filter (:faq db))))
+ (fn [db _] (apply-filter (:questions db))))
 
 (def filter-chan (async/chan))
 
@@ -41,23 +62,50 @@
       (re-frame/dispatch [:filter! f])
       (recur (async/<! filter-chan)))))
 
+(defn get-answer-from-id [id]
+  (first (filter #(= (:i %) id) faq-answers)))
+
+(defn list-questions []
+  [:ul.list
+   (for [question @(re-frame/subscribe [:filtered-faq?])
+         :let     [id (:i question)
+                   text (:q question)]]
+     ^{:key (random-uuid)}
+     [:li.list-item
+      [:p [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
+           text]]])])
+
+(defn display-answer [a]
+  [:div.notification
+   [:div.columns.is-vcentered
+    [:p.column.is-multiline [:strong.is-size-5 (:q a)]]
+    [:button.button.column.is-2
+     {:on-click #(re-frame/dispatch [:display-answer! nil])} "Retour"]]
+   [:br]
+   [:p (:r a)]
+   [:br]
+   [:p
+    [:a {:href (str "http://" (:u a))} (:s a)] " - mise à jour du " (:m a) " - " (:c a)]])
+
 (defn main-page []
-  (let [filter @(re-frame/subscribe [:filter?])]
+  (let [filter    @(re-frame/subscribe [:filter?])
+        answer-id @(re-frame/subscribe [:display-answer?])]
     [:div
      [:input.input
       {:size        20
        :placeholder "Recherche"
        :value       (:q @(re-frame/subscribe [:filter?]))
        :on-change   (fn [e]
+                      (re-frame/dispatch [:display-answer! nil])
                       (let [ev (.-value (.-target e))]
                         (async/go
                           (async/>! filter-chan {:q ev}))))}]
      [:br]
      [:br]
-     [:ul.list
-      (for [f @(re-frame/subscribe [:filtered-faq?])]
-        ^{:key (random-uuid)}
-        [:li.list-item [:p (:q f)]])]]))
+     (if answer-id
+       (let [a (get-answer-from-id answer-id)]
+         (display-answer a))
+       (list-questions))]))
 
 (defn ^:export init []
   (re-frame/clear-subscription-cache!)
