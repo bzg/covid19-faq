@@ -47,8 +47,17 @@
 
 (defn apply-filter [m]
   (let [f @(re-frame/subscribe [:filter?])
-        q (:q f)]
-    (filter #(re-matches (re-pattern (str ".*" q ".*")) (:q %)) m)))
+        q (:q f)
+        p (str ".*(" q ").*")]
+    (map
+     #(if (not-empty (:q f))
+        (let [question (:q %)]
+          (when-let [match (re-matches (re-pattern p) question)]
+            (assoc % :q (clojure.string/replace
+                         question (last match)
+                         (str "<b>" (last match) "</b>")))))
+        %)
+     m)))
 
 (re-frame/reg-sub
  :filtered-faq?
@@ -67,19 +76,19 @@
 
 (defn list-questions []
   [:ul.list
-   (for [question @(re-frame/subscribe [:filtered-faq?])
+   (for [question (remove nil? (take 12 @(re-frame/subscribe [:filtered-faq?])))
          :let     [id (:i question)
                    text (:q question)]]
      ^{:key (random-uuid)}
      [:li.list-item
       [:p [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
-           text]]])])
+           [:span {:dangerouslySetInnerHTML {:__html text}}]]]])])
 
 (defn display-answer [a]
   [:div.notification
    [:div.columns.is-vcentered
-    [:p.column.is-multiline [:strong.is-size-5 (:q a)]]
-    [:button.button.column.is-2
+    [:p.column.is-multiline.is-9 [:strong.is-size-5 (:q a)]]
+    [:button.button.column.is-2.is-offset-1
      {:on-click #(re-frame/dispatch [:display-answer! nil])} "Retour"]]
    [:br]
    [:p (:r a)]
