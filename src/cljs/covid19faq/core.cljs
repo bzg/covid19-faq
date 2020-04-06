@@ -76,7 +76,7 @@
 
 (defn list-questions []
   [:ul.list
-   (for [question @(re-frame/subscribe [:filtered-faq?])
+   (for [question (remove nil? @(re-frame/subscribe [:filtered-faq?]))
          :let     [id (:i question)
                    text (:q question)]]
      ^{:key (random-uuid)}
