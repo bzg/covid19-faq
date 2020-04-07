@@ -4,15 +4,17 @@
    [clojure.set]
    [clojure.java.io :as io]))
 
-(def latest-csv-path "data/sources/2020.04.06_-_FAQ_gouvernement_V7.csv")
+(def latest-csv-path "data/sources/2020.04.06_-_FAQ_gouvernement_V8.csv")
 
 (def csv
   (with-open [reader (io/reader latest-csv-path)]
-    (doall
-     (csv/read-csv reader :separator \; :quote \"))))
+    (doall (csv/read-csv reader :separator \;))))
+
+;; (dotimes [n (count csv)]
+;;   (println (count (nth csv n))))
 
 (defn rows->maps [csv]
-  (let [headers (conj (butlast (first csv)) "Id")
+  (let [headers (cons "Id" (first csv))
         rows    (let [rows (rest csv)
                       acc  (atom nil)]
                   (dotimes [n (count rows)]
