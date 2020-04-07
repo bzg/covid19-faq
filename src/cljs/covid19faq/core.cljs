@@ -15,10 +15,12 @@
 (def global-filter (reagent/atom {:query ""}))
 
 (def faq-questions
-  (cljs.reader/read-string (inline "data/faq-questions.edn")))
+  (cljs.reader/read-string
+   (inline "data/faq-questions.edn")))
 
 (def faq-answers
-  (cljs.reader/read-string (inline "data/faq-answers.edn")))
+  (cljs.reader/read-string
+   (inline "data/faq-answers.edn")))
 
 (re-frame/reg-event-db
  :initialize-db!
@@ -97,7 +99,7 @@
     [:button.button.column.is-2.is-offset-1
      {:on-click #(re-frame/dispatch [:display-answer! nil])} "Retour"]]
    [:br]
-   [:p (:r a)]
+   [:span {:dangerouslySetInnerHTML {:__html (:r a)}}]
    [:br]
    [:p
     [:a {:href (str "http://" (:u a))} (:s a)]

@@ -1,4 +1,4 @@
-(ns covid19faq.corese
+(ns covid19faq.core
   (:require ;; [cheshire.core :as json]
    [clojure.data.csv :as csv]
    [clojure.set]
@@ -6,12 +6,14 @@
 
 (def latest-csv-path "data/sources/2020.04.06_-_FAQ_gouvernement_V8.csv")
 
+(def url-regex #"(?i)\b((?:([a-z][\w-]+:(?:/{1,3}|[a-z0-9%]))|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
+
+(defn linkify [s]
+  (clojure.string/replace s url-regex "<a target=\"new\" href=\"$1\">$1</a>"))
+
 (def csv
   (with-open [reader (io/reader latest-csv-path)]
     (doall (csv/read-csv reader :separator \;))))
-
-;; (dotimes [n (count csv)]
-;;   (println (count (nth csv n))))
 
 (defn rows->maps [csv]
   (let [headers (cons "Id" (first csv))
@@ -43,7 +45,8 @@
 (defn spit-faq-answers []
   (spit "data/faq-answers.edn"
         (pr-str (map #(select-keys % [:i :s :u :r :m :c :q])
-                     (csv-as-map csv)))))
+                     (map #(update % :r linkify)
+                          (csv-as-map csv))))))
 
 (defn -main []
   (spit-faq-questions)
