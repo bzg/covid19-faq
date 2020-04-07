@@ -2,14 +2,21 @@
   (:require ;; [cheshire.core :as json]
    [clojure.data.csv :as csv]
    [clojure.set]
+   [clojure.string :as s]
    [clojure.java.io :as io]))
 
 (def latest-csv-path "data/sources/2020.04.06_-_FAQ_gouvernement_V8.csv")
 
 (def url-regex #"(?i)\b((?:([a-z][\w-]+:(?:/{1,3}|[a-z0-9%]))|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
 
+(defn fix-capital [s]
+  (s/replace s #"(\. )([a-z])" #(s/upper-case (first %))))
+
+(defn make-br [s]
+  (s/replace s "\n" "<br/>"))
+
 (defn linkify [s]
-  (clojure.string/replace s url-regex "<a target=\"new\" href=\"$1\">$1</a>"))
+  (s/replace s url-regex "<a target=\"new\" href=\"$1\">$1</a>"))
 
 (def csv
   (with-open [reader (io/reader latest-csv-path)]
@@ -40,13 +47,16 @@
 (defn spit-faq-questions []
   (spit "data/faq-questions.edn"
         (pr-str (map #(select-keys % [:i :q])
-                     (csv-as-map csv)))))
+                     (map #(update % :q fix-capital)
+                          (csv-as-map csv))))))
 
 (defn spit-faq-answers []
   (spit "data/faq-answers.edn"
-        (pr-str (map #(select-keys % [:i :s :u :r :m :c :q])
-                     (map #(update % :r linkify)
-                          (csv-as-map csv))))))
+        (pr-str
+         (->> (csv-as-map csv)
+              (map #(update % :q fix-capital))
+              (map #(update % :r (comp linkify make-br)))
+              (map #(select-keys % [:i :s :u :r :m :c :q]))))))
 
 (defn -main []
   (spit-faq-questions)
