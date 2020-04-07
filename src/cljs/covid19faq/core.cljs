@@ -1,4 +1,4 @@
-;; Copyright (c) 2020 DINSIC, Bastien Guerry <bastien.guerry@data.gouv.fr>
+;; Copyright (c) 2020 DINUM, Bastien Guerry <bastien.guerry@data.gouv.fr>
 ;; SPDX-License-Identifier: EPL-2.0
 ;; License-Filename: LICENSES/EPL-2.0.txt
 
@@ -49,8 +49,7 @@
 
 (defn apply-filter [m]
   (let [f @(re-frame/subscribe [:filter?])
-        q (:query f)
-        p (str ".*(" q ").*")]
+        p (str ".*(" (s/join ".*" (s/split (:query f) #"\s+")) ").*")]
     (sort-by
      :x
      (map
@@ -99,7 +98,7 @@
     [:button.button.column.is-2.is-offset-1
      {:on-click #(re-frame/dispatch [:display-answer! nil])} "Retour"]]
    [:br]
-   [:span {:dangerouslySetInnerHTML {:__html (:r a)}}]
+   [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
    [:br]
    [:p
     [:a {:href (str "http://" (:u a))} (:s a)]
