@@ -22,3 +22,6 @@ todo.org
 .cpcache/
 resources/public/images/*svg
 *edn
+docs/js/*
+docs/css/*
+docs/fonts/*
