@@ -3,6 +3,7 @@
    [clojure.data.csv :as csv]
    [clojure.set]
    [clojure.string :as s]
+   [covid19faq.index :as index]
    [clojure.java.io :as io]))
 
 (def latest-csv-path "data/sources/2020.04.06_-_FAQ_gouvernement_V8.csv")
@@ -58,7 +59,12 @@
               (map #(update % :r (comp linkify make-br)))
               (map #(select-keys % [:i :s :u :r :m :c :q]))))))
 
+(defn spit-index []
+  (spit "resources/public/index.html"
+        (index/default)))
+
 (defn -main []
+  (spit-index)
   (spit-faq-questions)
   (spit-faq-answers))
 

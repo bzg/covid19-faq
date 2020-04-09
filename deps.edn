@@ -11,6 +11,7 @@
   org.clojure/clojurescript       {:mvn/version "1.10.597"}
   org.clojure/core.async          {:mvn/version "1.0.567"}
   org.clojure/tools.reader        {:mvn/version "1.3.2"}
+  markdown-to-hiccup              {:mvn/version "0.6.2"}
   re-frame                        {:mvn/version "0.12.0"}
   reagent                         {:mvn/version "0.10.0"}
   reagent-utils                   {:mvn/version "0.3.3"}
@@ -20,7 +21,9 @@
  :paths ["src" "src/clj" "resources"]
  
  :aliases
- {:fig {:main-opts   ["-m" "figwheel.main" "-b" "dev" "-r"]
+ {:web {:main-opts ["-m" "covid19faq.core"]}
+
+  :fig {:main-opts   ["-m" "figwheel.main" "-b" "dev" "-r"]
         :extra-paths ["src/cljs"]}
 
   :js {:main-opts   ["-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
