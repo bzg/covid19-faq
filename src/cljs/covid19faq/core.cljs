@@ -12,6 +12,8 @@
             [reagent.dom]))
 
 (defonce timeout 100)
+(defonce how-many-questions 10)
+
 (def global-filter (reagent/atom {:query ""}))
 
 (def faq-questions
@@ -50,21 +52,23 @@
 (defn apply-filter [m]
   (let [f @(re-frame/subscribe [:filter?])
         p (str "(?i).*(" (s/join ".*" (s/split (:query f) #"\s+")) ").*")]
-    (sort-by
-     :x
-     (map
-      #(if (not-empty (:query f))
-         (let [question (:q %)]
-           (when-let [match (re-matches (re-pattern p) question)]
-             (let [matched (last match)
-                   idx     (s/index-of question matched)]
-               (assoc %
-                      :x idx
-                      :q (s/replace
-                          question (last match)
-                          (str "<b>" (last match) "</b>"))))))
-         %)
-      m))))
+    (if (not-empty (:query f))
+      (sort-by
+       :x
+       (map
+        #(if (not-empty (:query f))
+           (let [question (:q %)]
+             (when-let [match (re-matches (re-pattern p) question)]
+               (let [matched (last match)
+                     idx     (s/index-of question matched)]
+                 (assoc %
+                        :x idx
+                        :q (s/replace
+                            question (last match)
+                            (str "<b>" (last match) "</b>"))))))
+           %)
+        m))
+      (take how-many-questions m))))
 
 (re-frame/reg-sub
  :filtered-faq?
