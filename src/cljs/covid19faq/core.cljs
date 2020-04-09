@@ -49,7 +49,7 @@
 
 (defn apply-filter [m]
   (let [f @(re-frame/subscribe [:filter?])
-        p (str ".*(" (s/join ".*" (s/split (:query f) #"\s+")) ").*")]
+        p (str "(?i).*(" (s/join ".*" (s/split (:query f) #"\s+")) ").*")]
     (sort-by
      :x
      (map
