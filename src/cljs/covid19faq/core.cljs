@@ -143,7 +143,7 @@
    [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
    [:br]
    [:p
-    [:a {:href (str "http://" (:u a))} (:s a)]
+    [:a {:href (:u a)} (:s a)]
     " - mise à jour du " (:m a) " - " (:c a)]])
 
 (defn faq-sources-select []
