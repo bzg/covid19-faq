@@ -17,6 +17,7 @@
   reagent-utils                   {:mvn/version "0.3.3"}
   org.clojure/data.csv            {:mvn/version "1.0.0"}
   metosin/reitit-frontend         {:mvn/version "0.4.2"}
+  cljsjs/clipboard                {:mvn/version "2.0.4-0"}
   }
 
  :paths ["src" "src/clj" "resources"]

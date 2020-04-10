@@ -12,7 +12,8 @@
             [reagent.dom]
             [goog.string :as gstring]
             [reitit.frontend :as rf]
-            [reitit.frontend.easy :as rfe]))
+            [reitit.frontend.easy :as rfe]
+            [cljsjs.clipboard]))
 
 (defonce timeout 100)
 (defonce how-many-questions 10)
@@ -135,19 +136,40 @@
             [:td (:m question)]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
+;; Create a copy-to-clipboard component
+(defn clipboard-button [label target]
+  (let [clipboard-atom (reagent/atom nil)]
+    (reagent/create-class
+     {:display-name "clipboard-button"
+      :component-did-mount
+      #(let [clipboard (new js/ClipboardJS (reagent.dom/dom-node %))]
+         (reset! clipboard-atom clipboard))
+      :component-will-unmount
+      #(when-not (nil? @clipboard-atom)
+         (reset! clipboard-atom nil))
+      :reagent-render
+      (fn []
+        [:a.button.is-fullwidth.is-light.is-size-4
+         {:title                 "Copier dans le presse papier"
+          :data-clipboard-target target}
+         label])})))
+
 (defn display-answer [a]
   (do (.focus (.getElementById js/document "search"))
       [:div
+       {:id "copy-this"}
        [:div.columns.is-vcentered
         [:div.column.is-multiline.is-9
          [:p [:strong.is-size-4 (:q a)]]]
-        [:div.column.has-text-centered
-         [:button.button.is-fullwidth.is-info.is-light
-          {:on-click #(rfe/push-state :home)} "Retour"]]
         ;; TODO
         [:div.column.has-text-centered
-         [:a.button.is-fullwidth.is-success.is-light
-          {:on-click #(rfe/push-state :home)} "Partager"]]]
+         [:a.button.is-fullwidth.is-info.is-light.is-size-4
+          {:on-click #(rfe/push-state :home)} "📧"]]
+        [:div.column.has-text-centered
+         [clipboard-button "📋" "#copy-this"]]
+        [:div.column.has-text-centered
+         [:button.button.is-fullwidth.is-warning.is-light.is-size-4
+          {:on-click #(rfe/push-state :home)} "❌"]]]
        [:br]
        [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
        [:br]
