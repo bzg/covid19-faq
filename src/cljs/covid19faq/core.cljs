@@ -131,7 +131,7 @@
            ^{:key (random-uuid)}
            [:tr
             [:td (:s question)]
-            [:td [:a {:tabindex 0 :on-click #(rfe/push-state :home nil {:faq id})}
+            [:td [:a {:tabIndex 0 :on-click #(rfe/push-state :home nil {:faq id})}
                   [:span {:dangerouslySetInnerHTML {:__html text}}]]]
             [:td (:m question)]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
@@ -154,6 +154,13 @@
           :data-clipboard-target target}
          label])})))
 
+(defn email-link [question answer url]
+  (str "mailto:"
+       "?subject=" question
+       "&body="
+       (s/replace (str answer "\nSource officielle: " url)
+                  #"[\n\t]" "%0D%0A%0D%0A")))
+
 (defn display-answer [a]
   (do (.focus (.getElementById js/document "search"))
       [:div
@@ -164,7 +171,9 @@
         ;; TODO
         [:div.column.has-text-centered
          [:a.button.is-fullwidth.is-info.is-light.is-size-4
-          {:on-click #(rfe/push-state :home)} "📧"]]
+          {:href (email-link (:q a) (:r a)
+                             (. (. js/document -location) -href))}
+          "📩"]]
         [:div.column.has-text-centered
          [clipboard-button "📋" "#copy-this"]]
         [:div.column.has-text-centered
@@ -180,7 +189,7 @@
 (defn faq-sources-select []
   [:select.select
    {:value     (or (:source @(re-frame/subscribe [:filter?])) "")
-    :tabindex  0
+    :tabIndex  0
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
                    (.focus (.getElementById js/document "search"))
@@ -198,7 +207,7 @@
      [:div.columns.is-vcentered
       [:input.input.column.is-8
        {:id          "search"
-        :tabindex    0
+        :tabIndex    0
         :size        20
         :placeholder "Recherche"
         :value       (or (:query @global-filter)
