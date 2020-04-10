@@ -10,13 +10,13 @@
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]
             [reagent.dom]
-            [goog.string :as gstring]))
+            [goog.string :as gstring]
+            [reitit.frontend :as rf]
+            [reitit.frontend.easy :as rfe]))
 
 (defonce timeout 100)
 (defonce how-many-questions 10)
 (defonce minimum-search-string-size 4)
-
-(def global-filter (reagent/atom {:query "" :source ""}))
 
 ;; (defn to-timestamp [s]
 ;;   (js/Date. (.parse js/Date s)))
@@ -40,25 +40,27 @@
   (cljs.reader/read-string
    (inline "data/faq-sources.edn")))
 
-(def faq-categories
-  (cljs.reader/read-string
-   (inline "data/faq-categories.edn")))
+(def init-filter  {:query "" :source "" :faq ""})
+(def global-filter (reagent/atom init-filter))
 
 (re-frame/reg-event-db
  :initialize-db!
  (fn [_ _]
-   {:questions      faq-questions
-    :answers        faq-answers
-    :display-answer nil
-    :filter         {:query "" :source ""}}))
+   {:questions faq-questions
+    :answers   faq-answers
+    :view      :home
+    :filter    init-filter}))
 
 (re-frame/reg-event-db
- :display-answer!
- (fn [db [_ b]] (assoc db :display-answer b)))
+ :view!
+ (fn [db [_ view query-params]]
+   (reset! global-filter (merge init-filter query-params))
+   (re-frame/dispatch [:filter! (merge init-filter query-params)])
+   (assoc db :view view)))
 
 (re-frame/reg-sub
- :display-answer?
- (fn [db _] (:display-answer db)))
+ :view?
+ (fn [db _] (:view db)))
 
 (re-frame/reg-event-db
  :filter!
@@ -104,6 +106,12 @@
   (async/go
     (loop [f (async/<! filter-chan)]
       (re-frame/dispatch [:filter! f])
+      (rfe/push-state
+       :home nil
+       (merge (when-let [q (not-empty
+                            (:query @global-filter))] {:query q})
+              (when-let [s (not-empty
+                            (:source @global-filter))] {:source s})))
       (recur (async/<! filter-chan)))))
 
 (defn get-answer-from-id [id]
@@ -122,7 +130,7 @@
            ^{:key (random-uuid)}
            [:tr
             [:td (:s question)]
-            [:td [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
+            [:td [:a {:on-click #(rfe/push-state :home nil {:faq id})}
                   [:span {:dangerouslySetInnerHTML {:__html text}}]]]
             [:td (:m question)]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
@@ -134,13 +142,11 @@
      [:p [:strong.is-size-4 (:q a)]]]
     [:div.column.has-text-centered
      [:button.button.is-fullwidth.is-info.is-light
-      {:on-click #(re-frame/dispatch [:display-answer! nil])}
-      "Retour"]]
+      {:on-click #(rfe/push-state :home)} "Retour"]]
     ;; TODO
     [:div.column.has-text-centered
      [:a.button.is-fullwidth.is-success.is-light
-      {:on-click #(re-frame/dispatch [:display-answer! nil])}
-      "Partager"]]]
+      {:on-click #(rfe/push-state :home)} "Partager"]]]
    [:br]
    [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
    [:br]
@@ -163,10 +169,8 @@
    [:option {:value ""} "Tout"]])
 
 (defn main-page []
-  (let [answer-id @(re-frame/subscribe [:display-answer?])]
+  (let [answer-id (:faq @(re-frame/subscribe [:filter?]))]
     [:div
-     [:p @(re-frame/subscribe [:filter?])]
-     [:br]
      [:div.columns.is-vcentered
       [:input.input.column.is-8
        {:id          "search"
@@ -175,7 +179,6 @@
         :value       (or (:query @global-filter)
                          (:query @(re-frame/subscribe [:filter?])))
         :on-change   (fn [e]
-                       (re-frame/dispatch [:display-answer! nil])
                        (let [ev      (.-value (.-target e))
                              ev-size (count ev)]
                          (reset! global-filter (merge @global-filter {:query ev}))
@@ -186,16 +189,25 @@
                              (async/>! filter-chan {:query ev})))))}]
       [:div.column (faq-sources-select)]]
      [:br]
-     [:br]
-     (if answer-id
+     (if (not-empty answer-id)
        (let [a (get-answer-from-id answer-id)]
          (display-answer a))
        (display-questions))]))
+
+(def routes
+  [["/" :home]])
+
+(defn on-navigate [match]
+  (let [target-page (:name (:data match))
+        params      (:query-params match)]
+    (re-frame/dispatch [:view! (keyword target-page) params])))
 
 (defn ^:export init []
   (re-frame/clear-subscription-cache!)
   (re-frame/dispatch-sync [:initialize-db!])
   (start-filter-loop)
+  (rfe/start! (rf/router routes {:conflicts nil})
+              on-navigate {:use-fragment false})
   (reagent.dom/render
    [main-page]
    (. js/document (getElementById "app")))
