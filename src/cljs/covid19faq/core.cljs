@@ -76,20 +76,22 @@
         p   (str "(?i).*(" (s/join ".*" (s/split q #"\s+")) ").*")]
     (if-not (and (= q "") (= "" src))
       (filter #(and (if (not-empty src) (= src (:s %)) true))
-              (->> m
-                   (map
-                    #(if (not-empty q)
-                       (let [question      (:q %)
-                             match-against (str (:q %) " " (:s %) " " (:c %))]
-                         (when-let [match (re-matches (re-pattern p) match-against)]
-                           (let [matched (last match)
-                                 idx     (s/index-of question matched)]
-                             (assoc %
-                                    :x idx
-                                    :q (s/replace
-                                        question (last match)
-                                        (str "<b>" (last match) "</b>"))))))
-                       %))))
+              (sort-by
+               :x
+               (->> m
+                    (map
+                     #(if (not-empty q)
+                        (let [question      (:q %)
+                              match-against (str (:q %) " " (:s %) " " (:c %))]
+                          (when-let [match (re-matches (re-pattern p) match-against)]
+                            (let [matched (last match)
+                                  idx     (s/index-of question matched)]
+                              (assoc %
+                                     :x idx
+                                     :q (s/replace
+                                         question (last match)
+                                         (str "<b>" (last match) "</b>"))))))
+                        %)))))
       (take how-many-questions (shuffle m)))))
 
 (re-frame/reg-sub
@@ -151,9 +153,10 @@
    {:value     (or (:source @(re-frame/subscribe [:filter?])) "")
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
-                   (reset! global-filter (merge @global-filter {:source ev}))
+                   (.focus (.getElementById js/document "search"))
+                   (reset! global-filter {:query "" :source ev})
                    (async/go
-                     (async/>! filter-chan {:source ev}))))}
+                     (async/>! filter-chan {:query "" :source ev}))))}
    (for [s faq-sources]
      ^{:key (random-uuid)}
      [:option {:value s} s])
@@ -166,7 +169,8 @@
      [:br]
      [:div.columns.is-vcentered
       [:input.input.column.is-8
-       {:size        20
+       {:id          "search"
+        :size        20
         :placeholder "Recherche"
         :value       (or (:query @global-filter)
                          (:query @(re-frame/subscribe [:filter?])))
@@ -194,4 +198,5 @@
   (start-filter-loop)
   (reagent.dom/render
    [main-page]
-   (. js/document (getElementById "app"))))
+   (. js/document (getElementById "app")))
+  (.focus (.getElementById js/document "search")))
