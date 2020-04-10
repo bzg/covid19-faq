@@ -1,5 +1,5 @@
 (ns covid19faq.core
-  (:require ;; [cheshire.core :as json]
+  (:require
    [clojure.data.csv :as csv]
    [clojure.set]
    [clojure.string :as s]
@@ -17,6 +17,9 @@
 
 (defn fix-capital [s]
   (s/replace s #"(\. )([a-z])" #(s/upper-case (first %))))
+
+(defn fix-unbreakable-space [s]
+  (s/replace s " ?" " ?"))
 
 (defn make-br [s]
   (s/replace s "\n" "<br/>"))
@@ -56,6 +59,7 @@
   (spit "data/faq-questions.edn"
         (pr-str
          (->> csv-map
+              (map #(update % :q fix-unbreakable-space))
               (map #(update % :q fix-capital))
               (map #(update % :m fix-date))
               (map #(select-keys % [:i :q :m :c :s]))))))
