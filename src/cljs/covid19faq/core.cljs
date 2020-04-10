@@ -136,23 +136,24 @@
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
 (defn display-answer [a]
-  [:div
-   [:div.columns.is-vcentered
-    [:div.column.is-multiline.is-9
-     [:p [:strong.is-size-4 (:q a)]]]
-    [:div.column.has-text-centered
-     [:button.button.is-fullwidth.is-info.is-light
-      {:on-click #(rfe/push-state :home)} "Retour"]]
-    ;; TODO
-    [:div.column.has-text-centered
-     [:a.button.is-fullwidth.is-success.is-light
-      {:on-click #(rfe/push-state :home)} "Partager"]]]
-   [:br]
-   [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
-   [:br]
-   [:p
-    [:a {:href (:u a)} (:s a)]
-    " - mise à jour du " (:m a) " - " (:c a)]])
+  (do (.focus (.getElementById js/document "search"))
+      [:div
+       [:div.columns.is-vcentered
+        [:div.column.is-multiline.is-9
+         [:p [:strong.is-size-4 (:q a)]]]
+        [:div.column.has-text-centered
+         [:button.button.is-fullwidth.is-info.is-light
+          {:on-click #(rfe/push-state :home)} "Retour"]]
+        ;; TODO
+        [:div.column.has-text-centered
+         [:a.button.is-fullwidth.is-success.is-light
+          {:on-click #(rfe/push-state :home)} "Partager"]]]
+       [:br]
+       [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
+       [:br]
+       [:p
+        [:a {:href (:u a)} (:s a)]
+        " - mise à jour du " (:m a) " - " (:c a)]]))
 
 (defn faq-sources-select []
   [:select.select
@@ -191,7 +192,7 @@
      [:br]
      (if (not-empty answer-id)
        (let [a (get-answer-from-id answer-id)]
-         (display-answer a))
+         (display-answer a))      
        (display-questions))]))
 
 (def routes
