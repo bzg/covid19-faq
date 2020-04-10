@@ -16,10 +16,10 @@
 (defonce how-many-questions 10)
 (defonce minimum-search-string-size 4)
 
-(def global-filter (reagent/atom {:query ""}))
+(def global-filter (reagent/atom {:query "" :source ""}))
 
-(defn to-timestamp [s]
-  (js/Date. (.parse js/Date s)))
+;; (defn to-timestamp [s]
+;;   (js/Date. (.parse js/Date s)))
 
 (defn to-locale-date [s]
   (when (string? s)
@@ -27,13 +27,22 @@
      (js/Date. (.parse js/Date s)))))
 
 (def faq-questions
-  (cljs.reader/read-string
-   (inline "data/faq-questions.edn")))
+  (map #(update % :m to-locale-date)
+       (cljs.reader/read-string
+        (inline "data/faq-questions.edn"))))
 
 (def faq-answers
-  (map #(update % :m to-timestamp)
+  (map #(update % :m to-locale-date)
        (cljs.reader/read-string
         (inline "data/faq-answers.edn"))))
+
+(def faq-sources
+  (cljs.reader/read-string
+   (inline "data/faq-sources.edn")))
+
+(def faq-categories
+  (cljs.reader/read-string
+   (inline "data/faq-categories.edn")))
 
 (re-frame/reg-event-db
  :initialize-db!
@@ -41,7 +50,7 @@
    {:questions      faq-questions
     :answers        faq-answers
     :display-answer nil
-    :filter         {:query ""}}))
+    :filter         {:query "" :source ""}}))
 
 (re-frame/reg-event-db
  :display-answer!
@@ -53,33 +62,34 @@
 
 (re-frame/reg-event-db
  :filter!
- ;; FIXME: (merge (:filter db) s) ?
- (fn [db [_ s]] (assoc db :filter s))) 
+ (fn [db [_ s]] (assoc db :filter (merge (:filter db) s))))
 
 (re-frame/reg-sub
  :filter?
  (fn [db _] (:filter db)))
 
 (defn apply-filter [m]
-  (let [f @(re-frame/subscribe [:filter?])
-        p (str "(?i).*(" (s/join ".*" (s/split (:query f) #"\s+")) ").*")]
-    (if (not-empty (:query f))
-      (sort-by
-       :x
-       (map
-        #(if (not-empty (:query f))
-           (let [question      (:q %)
-                 match-against (str (:q %) " " (:s %) " " (:c %))]
-             (when-let [match (re-matches (re-pattern p) match-against)]
-               (let [matched (last match)
-                     idx     (s/index-of question matched)]
-                 (assoc %
-                        :x idx
-                        :q (s/replace
-                            question (last match)
-                            (str "<b>" (last match) "</b>"))))))
-           %)
-        m))
+  (let [f   @(re-frame/subscribe [:filter?])
+        q   (:query f)
+        src (:source f)
+        cat (:category f)
+        p   (str "(?i).*(" (s/join ".*" (s/split q #"\s+")) ").*")]
+    (if-not (and (= q "") (= "" src))
+      (filter #(and (if (not-empty src) (= src (:s %)) true))
+              (->> m
+                   (map
+                    #(if (not-empty q)
+                       (let [question      (:q %)
+                             match-against (str (:q %) " " (:s %) " " (:c %))]
+                         (when-let [match (re-matches (re-pattern p) match-against)]
+                           (let [matched (last match)
+                                 idx     (s/index-of question matched)]
+                             (assoc %
+                                    :x idx
+                                    :q (s/replace
+                                        question (last match)
+                                        (str "<b>" (last match) "</b>"))))))
+                       %))))
       (take how-many-questions (shuffle m)))))
 
 (re-frame/reg-sub
@@ -100,17 +110,19 @@
 (defn display-questions []
   (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
     (if (not (empty? questions))
-      [:table.table.is-hoverable.is-fullwidth
-       [:thead [:tr [:th "Question"] [:th "Mise à jour"]]]
-       [:tbody
-        (for [question questions
-              :let     [id (:i question)
-                        text (:q question)]]
-          ^{:key (random-uuid)}
-          [:tr
-           [:td [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
-                 [:span {:dangerouslySetInnerHTML {:__html text}}]]]
-           [:td (to-locale-date (:m question))]])]]
+      [:div.table-container
+       [:table.table.is-hoverable.is-fullwidth.is-striped
+        [:thead [:tr [:th "Source"] [:th "Question"] [:th "Mise à jour"]]]
+        [:tbody
+         (for [question questions
+               :let     [id (:i question)
+                         text (:q question)]]
+           ^{:key (random-uuid)}
+           [:tr
+            [:td (:s question)]
+            [:td [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
+                  [:span {:dangerouslySetInnerHTML {:__html text}}]]]
+            [:td (:m question)]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
 (defn display-answer [a]
@@ -122,36 +134,53 @@
      [:button.button.is-fullwidth.is-info.is-light
       {:on-click #(re-frame/dispatch [:display-answer! nil])}
       "Retour"]]
-    ;; [:div.column.has-text-centered
-    ;;  [:a.button.is-success.is-fullwidth
-    ;;   {:on-click #(re-frame/dispatch [:display-answer! nil])}
-    ;;   "Partager"]]
-    ]
+    ;; TODO
+    [:div.column.has-text-centered
+     [:a.button.is-fullwidth.is-success.is-light
+      {:on-click #(re-frame/dispatch [:display-answer! nil])}
+      "Partager"]]]
    [:br]
    [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
    [:br]
    [:p
     [:a {:href (str "http://" (:u a))} (:s a)]
-    " - mise à jour du " (to-locale-date (:m a)) " - " (:c a)]])
+    " - mise à jour du " (:m a) " - " (:c a)]])
+
+(defn faq-sources-select []
+  [:select.select
+   {:value     (or (:source @(re-frame/subscribe [:filter?])) "")
+    :on-change (fn [e]
+                 (let [ev (.-value (.-target e))]
+                   (reset! global-filter (merge @global-filter {:source ev}))
+                   (async/go
+                     (async/>! filter-chan {:source ev}))))}
+   (for [s faq-sources]
+     ^{:key (random-uuid)}
+     [:option {:value s} s])
+   [:option {:value ""} "Tout"]])
 
 (defn main-page []
   (let [answer-id @(re-frame/subscribe [:display-answer?])]
     [:div
-     [:input.input
-      {:size        20
-       :placeholder "Recherche"
-       :value       (or (:query @global-filter)
-                        (:query @(re-frame/subscribe [:filter?])))
-       :on-change   (fn [e]
-                      (re-frame/dispatch [:display-answer! nil])
-                      (let [ev      (.-value (.-target e))
-                            ev-size (count ev)]
-                        (reset! global-filter {:query ev})
-                        (when (or (= ev-size 0)
-                                  (>= ev-size minimum-search-string-size))
-                          (async/go
-                            (async/<! (async/timeout timeout))
-                            (async/>! filter-chan {:query ev})))))}]
+     [:p @(re-frame/subscribe [:filter?])]
+     [:br]
+     [:div.columns.is-vcentered
+      [:input.input.column.is-8
+       {:size        20
+        :placeholder "Recherche"
+        :value       (or (:query @global-filter)
+                         (:query @(re-frame/subscribe [:filter?])))
+        :on-change   (fn [e]
+                       (re-frame/dispatch [:display-answer! nil])
+                       (let [ev      (.-value (.-target e))
+                             ev-size (count ev)]
+                         (reset! global-filter (merge @global-filter {:query ev}))
+                         (when (or (= ev-size 0)
+                                   (>= ev-size minimum-search-string-size))
+                           (async/go
+                             (async/<! (async/timeout timeout))
+                             (async/>! filter-chan {:query ev})))))}]
+      [:div.column (faq-sources-select)]]
      [:br]
      [:br]
      (if answer-id

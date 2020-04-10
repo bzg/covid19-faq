@@ -50,10 +50,12 @@
       "Question"    :q})
    (rows->maps csv)))
 
+(def csv-map (csv-as-map csv))
+
 (defn spit-faq-questions []
   (spit "data/faq-questions.edn"
         (pr-str
-         (->> (csv-as-map csv)
+         (->> csv-map
               (map #(update % :q fix-capital))
               (map #(update % :m fix-date))
               (map #(select-keys % [:i :q :m :c :s]))))))
@@ -61,11 +63,19 @@
 (defn spit-faq-answers []
   (spit "data/faq-answers.edn"
         (pr-str
-         (->> (csv-as-map csv)
+         (->> csv-map
               (map #(update % :m fix-date))
               (map #(update % :q fix-capital))
               (map #(update % :r (comp linkify make-br)))
               (map #(select-keys % [:i :s :u :r :m :c :q]))))))
+
+(defn spit-faq-sources []
+  (spit "data/faq-sources.edn"
+        (pr-str (distinct (map :s csv-map)))))
+
+(defn spit-faq-categories []
+  (spit "data/faq-categories.edn"
+        (pr-str (distinct (map :c csv-map)))))
 
 (defn spit-index []
   (spit "resources/public/index.html"
@@ -74,7 +84,21 @@
 (defn -main []
   (spit-index)
   (spit-faq-questions)
+  (spit-faq-sources)
+  (spit-faq-categories)
   (spit-faq-answers))
+
+(conj '([:option {:value ""} "2"]
+        [:option {:value ""} "3"])
+      [:option {:value ""} "1"])
+
+(cons [:select.column.is-offset-1
+       {:value     (or (:source "") "")
+        :on-change ""}]
+      '([:option {:value "Premier Ministre"} "Premier Ministre"]
+        [:option {:value "Premier Ministre"} "Premier Ministre"])
+
+      )
 
 ;; (-main)
 
