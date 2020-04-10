@@ -13,7 +13,7 @@
             [goog.string :as gstring]))
 
 (defonce timeout 100)
-(defonce how-many-questions 100)
+(defonce how-many-questions 10)
 (defonce minimum-search-string-size 4)
 
 (def global-filter (reagent/atom {:query ""}))
@@ -79,7 +79,7 @@
                             (str "<b>" (last match) "</b>"))))))
            %)
         m))
-      (reverse (sort-by :m (take how-many-questions m))))))
+      (take how-many-questions (shuffle m)))))
 
 (re-frame/reg-sub
  :filtered-faq?
