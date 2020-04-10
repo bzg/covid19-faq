@@ -130,7 +130,7 @@
            ^{:key (random-uuid)}
            [:tr
             [:td (:s question)]
-            [:td [:a {:on-click #(rfe/push-state :home nil {:faq id})}
+            [:td [:a {:tabindex 0 :on-click #(rfe/push-state :home nil {:faq id})}
                   [:span {:dangerouslySetInnerHTML {:__html text}}]]]
             [:td (:m question)]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
@@ -158,6 +158,7 @@
 (defn faq-sources-select []
   [:select.select
    {:value     (or (:source @(re-frame/subscribe [:filter?])) "")
+    :tabindex  0
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
                    (.focus (.getElementById js/document "search"))
@@ -175,6 +176,7 @@
      [:div.columns.is-vcentered
       [:input.input.column.is-8
        {:id          "search"
+        :tabindex    0
         :size        20
         :placeholder "Recherche"
         :value       (or (:query @global-filter)
