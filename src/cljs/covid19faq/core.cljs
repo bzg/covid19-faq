@@ -86,17 +86,19 @@
 (defn get-answer-from-id [id]
   (first (filter #(= (:i %) id) faq-answers)))
 
-(defn list-questions []
+(defn display-questions []
   (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
     (if (not (empty? questions))
-      [:ul.list
-       (for [question questions
-             :let     [id (:i question)
-                       text (:q question)]]
-         ^{:key (random-uuid)}
-         [:li.list-item
-          [:p [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
-               [:span {:dangerouslySetInnerHTML {:__html text}}]]]])]
+      [:table.table.is-hoverable.is-fullwidth
+       [:thead [:tr [:th "Question"]]]
+       [:tbody
+        (for [question questions
+              :let     [id (:i question)
+                        text (:q question)]]
+          ^{:key (random-uuid)}
+          [:tr
+           [:td [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
+                 [:span {:dangerouslySetInnerHTML {:__html text}}]]]])]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
 (defn display-answer [a]
@@ -135,7 +137,7 @@
      (if answer-id
        (let [a (get-answer-from-id answer-id)]
          (display-answer a))
-       (list-questions))]))
+       (display-questions))]))
 
 (defn ^:export init []
   (re-frame/clear-subscription-cache!)
