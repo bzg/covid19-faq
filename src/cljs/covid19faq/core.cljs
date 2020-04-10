@@ -9,21 +9,31 @@
             [clojure.string :as s]
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]
-            [reagent.dom]))
+            [reagent.dom]
+            [goog.string :as gstring]))
 
 (defonce timeout 100)
-(defonce how-many-questions 10)
+(defonce how-many-questions 100)
 (defonce minimum-search-string-size 4)
 
 (def global-filter (reagent/atom {:query ""}))
+
+(defn to-timestamp [s]
+  (js/Date. (.parse js/Date s)))
+
+(defn to-locale-date [s]
+  (when (string? s)
+    (.toLocaleDateString
+     (js/Date. (.parse js/Date s)))))
 
 (def faq-questions
   (cljs.reader/read-string
    (inline "data/faq-questions.edn")))
 
 (def faq-answers
-  (cljs.reader/read-string
-   (inline "data/faq-answers.edn")))
+  (map #(update % :m to-timestamp)
+       (cljs.reader/read-string
+        (inline "data/faq-answers.edn"))))
 
 (re-frame/reg-event-db
  :initialize-db!
@@ -69,7 +79,7 @@
                             (str "<b>" (last match) "</b>"))))))
            %)
         m))
-      (take how-many-questions m))))
+      (reverse (sort-by :m (take how-many-questions m))))))
 
 (re-frame/reg-sub
  :filtered-faq?
@@ -90,7 +100,7 @@
   (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
     (if (not (empty? questions))
       [:table.table.is-hoverable.is-fullwidth
-       [:thead [:tr [:th "Question"]]]
+       [:thead [:tr [:th "Question"] [:th "Mise à jour"]]]
        [:tbody
         (for [question questions
               :let     [id (:i question)
@@ -98,7 +108,8 @@
           ^{:key (random-uuid)}
           [:tr
            [:td [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
-                 [:span {:dangerouslySetInnerHTML {:__html text}}]]]])]]
+                 [:span {:dangerouslySetInnerHTML {:__html text}}]]]
+           [:td (to-locale-date (:m question))]])]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
 (defn display-answer [a]
