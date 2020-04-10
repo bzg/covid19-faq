@@ -229,7 +229,7 @@
        (display-questions))]))
 
 (def routes
-  [["/" :home]])
+  [["" :home]])
 
 (defn on-navigate [match]
   (let [target-page (:name (:data match))
