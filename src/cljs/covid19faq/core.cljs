@@ -113,17 +113,25 @@
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
 (defn display-answer [a]
-  [:div.notification
+  [:div
    [:div.columns.is-vcentered
-    [:p.column.is-multiline.is-9 [:strong.is-size-5 (:q a)]]
-    [:button.button.column.is-2.is-offset-1
-     {:on-click #(re-frame/dispatch [:display-answer! nil])} "Retour"]]
+    [:div.column.is-multiline.is-9
+     [:p [:strong.is-size-4 (:q a)]]]
+    [:div.column.has-text-centered
+     [:button.button.is-fullwidth.is-info.is-light
+      {:on-click #(re-frame/dispatch [:display-answer! nil])}
+      "Retour"]]
+    ;; [:div.column.has-text-centered
+    ;;  [:a.button.is-success.is-fullwidth
+    ;;   {:on-click #(re-frame/dispatch [:display-answer! nil])}
+    ;;   "Partager"]]
+    ]
    [:br]
    [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
    [:br]
    [:p
     [:a {:href (str "http://" (:u a))} (:s a)]
-    " - mise à jour du " (:m a) " - " (:c a)]])
+    " - mise à jour du " (to-locale-date (:m a)) " - " (:c a)]])
 
 (defn main-page []
   (let [answer-id @(re-frame/subscribe [:display-answer?])]
