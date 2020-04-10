@@ -13,6 +13,7 @@
 
 (defonce timeout 100)
 (defonce how-many-questions 10)
+(defonce minimum-search-string-size 4)
 
 (def global-filter (reagent/atom {:query ""}))
 
@@ -86,14 +87,17 @@
   (first (filter #(= (:i %) id) faq-answers)))
 
 (defn list-questions []
-  [:ul.list
-   (for [question (remove nil? @(re-frame/subscribe [:filtered-faq?]))
-         :let     [id (:i question)
-                   text (:q question)]]
-     ^{:key (random-uuid)}
-     [:li.list-item
-      [:p [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
-           [:span {:dangerouslySetInnerHTML {:__html text}}]]]])])
+  (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
+    (if (not (empty? questions))
+      [:ul.list
+       (for [question questions
+             :let     [id (:i question)
+                       text (:q question)]]
+         ^{:key (random-uuid)}
+         [:li.list-item
+          [:p [:a {:on-click #(re-frame/dispatch [:display-answer! id])}
+               [:span {:dangerouslySetInnerHTML {:__html text}}]]]])]
+      [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
 (defn display-answer [a]
   [:div.notification
@@ -121,7 +125,8 @@
                       (let [ev      (.-value (.-target e))
                             ev-size (count ev)]
                         (reset! global-filter {:query ev})
-                        (when (or (= ev-size 0) (> ev-size 2))
+                        (when (or (= ev-size 0)
+                                  (>= ev-size minimum-search-string-size))
                           (async/go
                             (async/<! (async/timeout timeout))
                             (async/>! filter-chan {:query ev})))))}]
