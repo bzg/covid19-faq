@@ -56,7 +56,7 @@
          (->> (csv-as-map csv)
               (map #(update % :q fix-capital))
               (map #(update % :m fix-date))
-              (map #(select-keys % [:i :q :m]))))))
+              (map #(select-keys % [:i :q :m :c :s]))))))
 
 (defn spit-faq-answers []
   (spit "data/faq-answers.edn"

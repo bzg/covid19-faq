@@ -68,8 +68,9 @@
        :x
        (map
         #(if (not-empty (:query f))
-           (let [question (:q %)]
-             (when-let [match (re-matches (re-pattern p) question)]
+           (let [question      (:q %)
+                 match-against (str (:q %) " " (:s %) " " (:c %))]
+             (when-let [match (re-matches (re-pattern p) match-against)]
                (let [matched (last match)
                      idx     (s/index-of question matched)]
                  (assoc %
