@@ -1,7 +1,9 @@
 ^{:watch-dirs   ["src/cljs"]
+  :ring-handler covid19faq.server/handler
   :css-dirs     ["resources/public/css"]
   :auto-testing false
-  :open-url     "http://localhost:9500/index.html"}
+  ;; :open-url     "http://localhost:9500/index.html"
+  }
 {:main       covid19faq.core
  :output-to  "resources/public/js/covid19faq.js"
  :output-dir "resources/public/js/dev"}
