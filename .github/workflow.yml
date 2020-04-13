@@ -9,8 +9,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - name: Checkout master
+        uses: actions/checkout@master
         with:
           fetch-depth: 1
+      - name: Install latest tools-deps
+        uses: DeLaGuardo/setup-clojure@2.0
+        with:
+          tools-deps: latest
+
+      - name: Compile js
+        run: clojure -A:js
+
       - name: Run Makefile
         run: make all
