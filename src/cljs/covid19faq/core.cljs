@@ -241,7 +241,7 @@
   (re-frame/dispatch-sync [:initialize-db!])
   (start-filter-loop)
   (rfe/start! (rf/router routes {:conflicts nil})
-              on-navigate {:use-fragment false})
+              on-navigate {:use-fragment true})
   (reagent.dom/render
    [main-page]
    (. js/document (getElementById "app")))
