@@ -16,7 +16,6 @@ pom.xml
 *txt
 .lsp/*
 *yaml
-data/sources/*csv
 todo.org
 .eastwood
 .cpcache/

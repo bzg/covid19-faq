@@ -6,7 +6,7 @@
    [covid19faq.index :as index]
    [clojure.java.io :as io]))
 
-(def latest-csv-path "data/sources/2020.04.10_-_FAQ_gouvernement_V9.csv")
+(def latest-csv-path "data/sources/exemple.csv")
 
 (def url-regex #"(?i)\b((?:([a-z][\w-]+:(?:/{1,3}|[a-z0-9%]))|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
 
