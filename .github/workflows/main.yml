@@ -18,8 +18,11 @@ jobs:
         with:
           tools-deps: latest
 
+      - name: Output edn files
+        run: clojure -m covid19faq.core
+
       - name: Compile js
         run: clojure -A:js
 
-      - name: Run Makefile
+      - name: Copy static files
         run: make all
