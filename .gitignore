@@ -1,4 +1,4 @@
-/resources/public/js/
+resources/public/js/
 figwheel_server.log
 pom.xml
 *jar
@@ -19,7 +19,6 @@ pom.xml
 todo.org
 .eastwood
 .cpcache/
-resources/public/images/*svg
 *edn
 docs/js/*
 docs/css/*

@@ -17,7 +17,8 @@
   :clean-targets ^{:protect false} ["target" "resources/public/js/dev/"
                                     "resources/public/js/choices.js"]
 
-  :aliases {"fig"       ["trampoline" "run" "-m" "figwheel.main"]
+  :aliases {"gen-edn"   ["trampoline" "run" "-m" "covid19faq.core"]
+            "fig"       ["trampoline" "run" "-m" "figwheel.main"]
             "fig:build" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]}
 
