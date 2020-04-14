@@ -24,3 +24,4 @@ resources/public/images/*svg
 docs/js/*
 docs/css/*
 docs/fonts/*
+target/
