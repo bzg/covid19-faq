@@ -166,7 +166,7 @@
      [:br]
      [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
      [:br]
-     [:p [:a {:href (:u a)} (:s a)] " - mise à jour du " (:m a)]]))
+     [:p [:a {:href (:u a)} (:s a)] " - version du " (:m a)]]))
 
 (defn faq-sources-select []
   [:select.select
