@@ -15,10 +15,9 @@
                          [org.flatland/ordered "1.5.9"]]
 
   :clean-targets ^{:protect false} ["target" "resources/public/js/dev/"
-                                    "resources/public/js/choices.js"]
+                                    "resources/public/js/covid19faq.js"]
 
-  :aliases {"gen-edn"   ["trampoline" "run" "-m" "covid19faq.core"]
-            "fig"       ["trampoline" "run" "-m" "figwheel.main"]
+  :aliases {"fig"       ["trampoline" "run" "-m" "figwheel.main"]
             "fig:build" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]}
 
@@ -32,5 +31,6 @@
                                   [re-frame "0.12.0"]
                                   [reagent "0.10.0"]
                                   [reagent-utils "0.3.3"]
+                                  [cljs-ajax "0.8.0"]
                                   [cljsjs/clipboard "2.0.4-0"]
                                   [metosin/reitit-frontend "0.4.2"]]}})

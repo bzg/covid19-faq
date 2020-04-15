@@ -1,5 +1,0 @@
-Generate the static website with these steps
-
-: clojure -m covid19faq.core
-: clojure -A:js
-: make
