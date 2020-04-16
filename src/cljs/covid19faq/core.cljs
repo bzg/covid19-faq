@@ -16,9 +16,9 @@
             [reitit.frontend.easy :as rfe]
             [cljsjs.clipboard]))
 
-(defonce timeout 100)
-(defonce how-many-questions 10)
-(defonce minimum-search-string-size 4)
+(defonce timeout 150)
+(defonce how-many-questions 12)
+(defonce minimum-search-string-size 3)
 (defonce faq-covid-19-api-url "https://compassionate-noyce-d66c87.netlify.com/faq.json")
 
 (def init-filter  {:query "" :source "" :faq ""})
