@@ -2,14 +2,14 @@
   (:require [hiccup.page :as h]
             [markdown-to-hiccup.core :as md]))
 
-(def index-meta {:index-title "FAQ COVID-19 - Toutes les questions et réponses des ministères"
+(def index-meta {:index-title "FAQ COVID-19 - Toutes les questions et réponses de l'administration"
                  :title       "FAQ COVID-19"
-                 :subtitle    "Toutes les questions et réponses des ministères"
-                 :keywords    "COVID-19 FAQ administration" ;; FIXME
-                 :description "FAQ COVID-19 - Toutes les questions et réponses des ministères"
+                 :subtitle    "Toutes les questions et réponses de l'administration"
+                 :keywords    "COVID-19 FAQ administration"
+                 :description "FAQ COVID-19 - Toutes les questions et réponses de l'administration"
                  :base-url    "/"
-                 :image-url   ""                            ;; FIXME
-                 :email       "contact@dinum.fr"            ;; FIXME
+                 :image-url   ""
+                 :email       "bzg@bzg.fr"
                  })
 
 (defn md-to-string [s]
@@ -38,28 +38,24 @@
    [:meta {:name "twitter:creator", :content ""}]
    (h/include-css "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css")
    (h/include-css "css/style.css")
-   [:script {:src "js/covid19faq.js"}]
-   ;; [:script "js.alert('ok');"] ;; FIXME   
-   ;; [:script {:type "text/javascript" :async true} "var _paq = window._paq || [];_paq.push(['trackPageView']);_paq.push(['enableLinkTracking']);(function(){var u=\"//stats.data.gouv.fr/\";_paq.push(['setTrackerUrl', u+'piwik.php']);_paq.push(['setSiteId', '???']);var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);})();"]
-   ;; [:noscript [:p [:img {:src "//stats.data.gouv.fr/piwik.php?idsite=???&rec=1" :alt "" :style "border:0;"}]]]
-   ])
+   [:script {:src "js/covid19faq.js"}]])
 
 (defn footer []
   [:footer.footer
-   [:div.content
-    [:div.columns
-     [:div.column.is-offset-2.is-4
-      ;; [:img {:src "images/???.svg" :width "240px"}]
-      [:ul.footer__social
-       [:li [:a {:href "https://twitter.com/MinSoliSante", :title "Twitter"}
-             [:svg.icon.icon-twitter [:use {:xlink:href "#twitter"}]]]]
-       [:li [:a {:href "https://github.com/delegation-numerique-en-sante", :title "Github"}
-             [:svg.icon.icon-github [:use {:xlink:href "#github"}]]]]
-       [:li [:a {:href (str "mailto:" (:email index-meta)), :title "Contacter par email"}
-             [:svg.icon.icon-mail [:use {:xlink:href "#envelope"}]]]]]]
-     [:div.column.is-offset-1.is-4
-      [:h1 "FAQ COVID19"]
-      [:p (md-to-string "Site développé en collaboration avec la [Direction interministérielle du numérique](https://www.numerique.gouv.fr/).")]]]]])
+   [:div.columns
+    [:div.column.is-4.is-offset-4
+     [:div.columns
+      [:div.column [:h1.title "FAQ COVID19"]]
+      [:div.column.is-1
+       [:a {:href "https://twitter.com/bzg2", :title "Twitter"}
+        [:svg.icon.icon-twitter [:use {:xlink:href "#twitter"}]]]]
+      [:div.column.is-1
+       [:a {:href "https://github.com/bzg", :title "Github"}
+        [:svg.icon.icon-github [:use {:xlink:href "#github"}]]]]
+      [:div.column.is-1
+       [:a {:href (str "mailto:" (:email index-meta)), :title "Contacter par email"}
+        [:svg.icon.icon-mail [:use {:xlink:href "#envelope"}]]]]]
+     [:p (md-to-string "Ce site est une initiative personnelle s'appuyant sur les ressources officielles.  Son auteur n'engage pas sa responsabilité dans l'usage fait des contenus.")]]]])
 
 (defn default []
   (h/html5
@@ -67,18 +63,6 @@
    (head)
    [:body
     (icons)
-    [:nav.navbar {:role "navigation" :aria-label "main navigation"}
-     [:div.navbar-brand
-      [:a.navbar-item
-       {:href "/"}
-       [:img.image.is-128x128
-        {:src "images/logo-marianne.svg"
-         :alt "Logo Marianne"}]]]
-     [:div.navbar-end
-      [:div.navbar-menu.is-size-5
-       [:a.navbar-item
-        {:href  "https://www.numerique.gouv.fr"
-         :title "Retour au site de la DINUM"} "DINUM"]]]]
     [:section.hero
      [:div.hero-body
       [:div.container
