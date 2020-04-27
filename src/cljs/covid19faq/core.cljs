@@ -103,7 +103,7 @@
       (recur (async/<! filter-chan)))))
 
 (defn get-answer-from-id [id]
-  (first (filter #(= (:i %) (js/parseInt id)) @(re-frame/subscribe [:faqs?]))))
+  (first (filter #(= (:i %) id) @(re-frame/subscribe [:faqs?]))))
 
 (defn display-questions []
   (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
