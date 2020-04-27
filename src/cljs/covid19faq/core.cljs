@@ -146,27 +146,27 @@
                   #"[\n\t]" "%0D%0A%0D%0A")))
 
 (defn display-answer [a]
-  (do ;; (.focus (.getElementById js/document "search"))
-    [:div
-     {:id "copy-this"}
-     [:div.columns.is-vcentered
-      [:div.column.is-multiline.is-9
-       [:p [:strong.is-size-4 (:q a)]]]
-      ;; TODO
-      [:div.column.has-text-centered
-       [:a.button.is-fullwidth.is-info.is-light.is-size-5
-        {:href (email-link (:q a) (:r a)
-                           (. (. js/document -location) -href))}
-        "📩"]]
-      [:div.column.has-text-centered
-       [clipboard-button "📋" "#copy-this"]]
-      [:div.column.has-text-centered
-       [:button.button.is-fullwidth.is-warning.is-light.is-size-5
-        {:on-click #(rfe/push-state :home)} "❌"]]]
-     [:br]
-     [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
-     [:br]
-     [:p [:a {:href (:u a)} (:s a)] " - version du " (:m a)]]))
+  ;; (.focus (.getElementById js/document "search"))
+  [:div
+   {:id "copy-this"}
+   [:div.columns.is-vcentered
+    [:div.column.is-multiline.is-9
+     [:p [:strong.is-size-4
+          {:dangerouslySetInnerHTML {:__html (:q a)}}]]]
+    [:div.column.has-text-centered
+     [:a.button.is-fullwidth.is-info.is-light.is-size-5
+      {:href (email-link (:q a) (:r a)
+                         (. (. js/document -location) -href))}
+      "📩"]]
+    [:div.column.has-text-centered
+     [clipboard-button "📋" "#copy-this"]]
+    [:div.column.has-text-centered
+     [:button.button.is-fullwidth.is-warning.is-light.is-size-5
+      {:on-click #(rfe/push-state :home)} "❌"]]]
+   [:br]
+   [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
+   [:br]
+   [:p [:a {:href (:u a)} (:s a)] " - version du " (:m a)]])
 
 (defn faq-sources-select []
   [:select.select
