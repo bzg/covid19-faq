@@ -19,7 +19,10 @@
 (defonce timeout 150)
 (defonce how-many-questions 12)
 (defonce minimum-search-string-size 3)
-(defonce faq-covid-19-api-url "https://bzg.github.io/covid19-faq-data/faq.json")
+
+(defonce faq-covid-19-api-url "https://bzg.github.io/covid19-faq-data/")
+(defonce faq-covid-19-questions "faq-questions.json")
+(defonce faq-covid-19-answers-dir "answers/")
 
 (def init-filter  {:query "" :source "" :faq ""})
 (def global-filter (reagent/atom init-filter))
@@ -102,9 +105,6 @@
                             (:source @global-filter))] {:source s})))
       (recur (async/<! filter-chan)))))
 
-(defn get-answer-from-id [id]
-  (first (filter #(= (:i %) id) @(re-frame/subscribe [:faqs?]))))
-
 (defn display-questions []
   (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
     (if (not (empty? questions))
@@ -145,28 +145,36 @@
        (s/replace (str answer "\nSource officielle: " url)
                   #"[\n\t]" "%0D%0A%0D%0A")))
 
-(defn display-answer [a]
-  ;; (.focus (.getElementById js/document "search"))
-  [:div
-   {:id "copy-this"}
-   [:div.columns.is-vcentered
-    [:div.column.is-multiline.is-9
-     [:p [:strong.is-size-4
-          {:dangerouslySetInnerHTML {:__html (:q a)}}]]]
-    [:div.column.has-text-centered
-     [:a.button.is-fullwidth.is-info.is-light.is-size-5
-      {:href (email-link (:q a) (:r a)
-                         (. (. js/document -location) -href))}
-      "📩"]]
-    [:div.column.has-text-centered
-     [clipboard-button "📋" "#copy-this"]]
-    [:div.column.has-text-centered
-     [:button.button.is-fullwidth.is-warning.is-light.is-size-5
-      {:on-click #(rfe/push-state :home)} "❌"]]]
-   [:br]
-   [:p {:dangerouslySetInnerHTML {:__html (:r a)}}]
-   [:br]
-   [:p [:a {:href (:u a)} (:s a)] " - version du " (:m a)]])
+(defn display-answer [id]
+  (let [answer-url (str faq-covid-19-api-url
+                        faq-covid-19-answers-dir
+                        id ".json")
+        answer     (reagent/atom {})]
+    (fn []
+      (GET answer-url
+           :handler
+           #(reset! answer (walk/keywordize-keys %)))
+      [:div
+       {:id "copy-this"}
+       [:div.columns.is-vcentered
+        [:div.column.is-multiline.is-9
+         [:p [:strong.is-size-4
+              {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
+        [:div.column.has-text-centered
+         [:a.button.is-fullwidth.is-info.is-light.is-size-5
+          {:href (email-link (:q @answer) (:r @answer)
+                             (. (. js/document -location) -href))}
+          "📩"]]
+        [:div.column.has-text-centered
+         [clipboard-button "📋" "#copy-this"]]
+        [:div.column.has-text-centered
+         [:button.button.is-fullwidth.is-warning.is-light.is-size-5
+          {:on-click #(rfe/push-state :home)} "❌"]]]
+       [:br]
+       [:p {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
+       [:br]
+       [:p [:a {:href (:u @answer)} (:s @answer)]
+        " - version du " (:m @answer)]])))
 
 (defn faq-sources-select []
   [:select.select
@@ -206,16 +214,17 @@
       [:div.column (faq-sources-select)]]
      [:br]
      (if (not-empty answer-id)
-       (let [a (get-answer-from-id answer-id)]
-         (display-answer a))      
-       (display-questions))]))
+       [display-answer answer-id]
+       [display-questions])]))
 
 (defn main-class []
   (reagent/create-class
    {:component-did-mount
-    (fn [] (GET faq-covid-19-api-url :handler
-                #(re-frame/dispatch [:faqs! (walk/keywordize-keys %)])))
-    :reagent-render (fn [] (main-page))}))
+    (fn [] (GET (str faq-covid-19-api-url faq-covid-19-questions)
+                :handler
+                #(re-frame/dispatch
+                  [:faqs! (walk/keywordize-keys %)])))
+    :reagent-render #(main-page)}))
 
 (def routes
   [["" :home]])
