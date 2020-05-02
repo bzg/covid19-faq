@@ -3,7 +3,6 @@
 ;; License-Filename: LICENSES/EPL-2.0.txt
 
 (ns covid19faq.core
-  (:require-macros [covid19faq.macros :refer [inline]])
   (:require [cljs.core.async :as async]
             [clojure.string :as s]
             [ajax.core :refer [GET]]
@@ -11,7 +10,6 @@
             [reagent.core :as reagent]
             [reagent.dom]
             [clojure.walk :as walk]
-            [goog.string :as gstring]
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
             [cljsjs.clipboard]))
@@ -20,9 +18,13 @@
 (defonce how-many-questions 12)
 (defonce minimum-search-string-size 3)
 
-(defonce faq-covid-19-api-url "https://bzg.github.io/covid19-faq-data/")
+(defonce faq-covid-19-api-url "http://localhost:3000")
+(defonce faq-covid-19-data-url "https://bzg.github.io/covid19-faq-data/")
 (defonce faq-covid-19-questions "faq-questions.json")
 (defonce faq-covid-19-answers-dir "answers/")
+
+(def token (atom nil))
+(def stats (atom nil))
 
 (def init-filter  {:query "" :source "" :faq ""})
 (def global-filter (reagent/atom init-filter))
@@ -146,7 +148,7 @@
                   #"[\n\t]" "%0D%0A%0D%0A")))
 
 (defn display-answer [id]
-  (let [answer-url (str faq-covid-19-api-url
+  (let [answer-url (str faq-covid-19-data-url
                         faq-covid-19-answers-dir
                         id ".json")
         answer     (reagent/atom {})]
@@ -214,16 +216,29 @@
       [:div.column (faq-sources-select)]]
      [:br]
      (if (not-empty answer-id)
-       [display-answer answer-id]
+       (do (GET (str faq-covid-19-api-url "/hit")
+                {:format        :json
+                 :params        {:token @token
+                                 :id    answer-id}
+                 :handler       (fn [r] (prn r))
+                 :error-handler (fn [r] (prn r))})
+           [display-answer answer-id])
        [display-questions])]))
 
 (defn main-class []
   (reagent/create-class
    {:component-did-mount
-    (fn [] (GET (str faq-covid-19-api-url faq-covid-19-questions)
-                :handler
-                #(re-frame/dispatch
-                  [:faqs! (walk/keywordize-keys %)])))
+    (fn []
+      (GET (str faq-covid-19-data-url faq-covid-19-questions)
+           :handler
+           #(re-frame/dispatch
+             [:faqs! (walk/keywordize-keys %)]))
+      (GET (str faq-covid-19-api-url "/stats")
+           :handler
+           #(reset! stats (walk/keywordize-keys %)))
+      (GET (str faq-covid-19-api-url "/token")
+           :handler
+           #(reset! token (or (:token (walk/keywordize-keys %)) ""))))
     :reagent-render #(main-page)}))
 
 (def routes
