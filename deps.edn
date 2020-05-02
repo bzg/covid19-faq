@@ -10,16 +10,11 @@
   org.clojure/clojure             {:mvn/version "1.10.1"}
   org.clojure/clojurescript       {:mvn/version "1.10.597"}
   org.clojure/core.async          {:mvn/version "1.0.567"}
-  org.clojure/tools.reader        {:mvn/version "1.3.2"}
-  markdown-to-hiccup              {:mvn/version "0.6.2"}
   re-frame                        {:mvn/version "0.12.0"}
   reagent                         {:mvn/version "0.10.0"}
-  reagent-utils                   {:mvn/version "0.3.3"}
-  org.clojure/data.csv            {:mvn/version "1.0.0"}
   metosin/reitit-frontend         {:mvn/version "0.4.2"}
   cljsjs/clipboard                {:mvn/version "2.0.4-0"}
-  cljs-ajax                       {:mvn/version "0.8.0"}
-  }
+  cljs-ajax                       {:mvn/version "0.8.0"}}
 
  :paths ["src" "src/clj" "src/cljs" "resources"]
  
