@@ -140,12 +140,39 @@
           :data-clipboard-target target}
          label])})))
 
-(defn email-link [question answer url]
-  (str "mailto:"
-       "?subject=[COVID-19] " question
-       "&body="
-       (s/replace (str answer "\nSource officielle: " url)
-                  #"[\n\t]" "%0D%0A%0D%0A")))
+(defn strip-html [s]
+  (-> s
+      (s/replace #"<br/?>" "\n")
+      (s/replace #"</?[^>]+>" "")))
+
+(defn bottom-links [{:keys [q r s u m]}]
+  (let [url   (.-href (.-location js/document))
+        e-str (when (and q r u url)
+                (str "mailto:"
+                     "?subject=[COVID-19] " q
+                     "&body="
+                     (s/replace
+                      (str (strip-html r)
+                           "\nSource officielle : " u
+                           "\nEnvoyé depuis : " url)
+                      #"[\n\t]" "%0D%0A%0D%0A")))]
+    [:div.columns
+     [:div.column.is-4
+      [:a.button.is-fullwidth.is-success.is-light.is-size-5
+       {:target "new"
+        :title  (when m (str "Question relevée le " (subs m 0 10)))
+        :href   u} s]]
+     [:div.column.has-text-centered.is-4
+      [:a.button.is-fullwidth.is-warning.is-light.is-size-5
+       {:title    "Voir d'autres questions de cette source"
+        :on-click #(rfe/push-state :home nil {:source s})}
+       "Retour à cette FAQ"]]
+     [:div.column.has-text-centered.is-2
+      [:a.button.is-fullwidth.is-info.is-light.is-size-5
+       {:title "Envoyer la question et la réponse par email"
+        :href  e-str} "📩"]]
+     [:div.column.has-text-centered.is-2
+      [clipboard-button "📋" "#copy-this"]]]))
 
 (defn display-answer [id]
   (let [a-url  (str faq-covid-19-data-url
@@ -156,27 +183,20 @@
       (GET a-url :handler
            #(reset! answer (walk/keywordize-keys %)))
       [:div
-       {:id "copy-this"}
-       [:div.columns.is-vcentered
-        [:div.column.is-multiline.is-9
-         [:p [:strong.is-size-4
-              {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
-        [:div.column.has-text-centered
-         [:a.button.is-fullwidth.is-info.is-light.is-size-5
-          {:href (email-link (:q @answer) (:r @answer)
-                             (. (. js/document -location) -href))}
-          "📩"]]
-        [:div.column.has-text-centered
-         [clipboard-button "📋" "#copy-this"]]
-        [:div.column.has-text-centered
-         [:button.button.is-fullwidth.is-warning.is-light.is-size-5
-          {:on-click #(rfe/push-state :home)} "❌"]]]
-       [:br]
-       [:p {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
-       [:br]
-       [:p [:a {:href (:u @answer)} (:s @answer)]
-        (when-let [d (:m @answer)]
-          (str " - version du " (subs d 0 10)))]])))
+       [:div
+        {:id "copy-this"}
+        [:div.columns.is-vcentered
+         [:div.column.is-multiline.is-11
+          [:p [:strong.is-size-4
+               {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
+         [:div.column.has-text-centered
+          [:a.delete.is-large {:on-click #(rfe/push-state :home)}]]]
+        [:br]
+        [:p {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
+        [:br]]
+       (if-let [a @answer]
+         [bottom-links a]
+         [:br])])))
 
 (defn faq-sources-select []
   [:select.select
