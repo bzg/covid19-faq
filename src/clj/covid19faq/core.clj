@@ -42,13 +42,13 @@
     [:div.column.is-4.is-offset-4
      [:div.columns
       [:div.column [:h1.title "FAQ COVID19"]]
-      [:div.column.is-1
+      [:div.column.has-text-centered.is-1
        [:a {:href "https://twitter.com/bzg2", :title "Twitter"}
         [:svg.icon.icon-twitter [:use {:xlink:href "#twitter"}]]]]
-      [:div.column.is-1
+      [:div.column.has-text-centered.is-1
        [:a {:href "https://github.com/bzg", :title "Github"}
         [:svg.icon.icon-github [:use {:xlink:href "#github"}]]]]
-      [:div.column.is-1
+      [:div.column.has-text-centered.is-1
        [:a {:href (str "mailto:" (:email index-meta)), :title "Contacter par email"}
         [:svg.icon.icon-mail [:use {:xlink:href "#envelope"}]]]]]
      [:p "Ce site est une initiative personnelle s'appuyant sur les ressources officielles.  Son auteur n'engage pas sa responsabilité dans l'usage fait des contenus."]]]])
