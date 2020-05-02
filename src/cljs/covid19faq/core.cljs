@@ -148,13 +148,12 @@
                   #"[\n\t]" "%0D%0A%0D%0A")))
 
 (defn display-answer [id]
-  (let [answer-url (str faq-covid-19-data-url
-                        faq-covid-19-answers-dir
-                        id ".json")
-        answer     (reagent/atom {})]
+  (let [a-url  (str faq-covid-19-data-url
+                    faq-covid-19-answers-dir
+                    id ".json")
+        answer (reagent/atom {})]
     (fn []
-      (GET answer-url
-           :handler
+      (GET a-url :handler
            #(reset! answer (walk/keywordize-keys %)))
       [:div
        {:id "copy-this"}
@@ -176,7 +175,8 @@
        [:p {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
        [:br]
        [:p [:a {:href (:u @answer)} (:s @answer)]
-        " - version du " (:m @answer)]])))
+        (when-let [d (:m @answer)]
+          (str " - version du " (subs d 0 10)))]])))
 
 (defn faq-sources-select []
   [:select.select
