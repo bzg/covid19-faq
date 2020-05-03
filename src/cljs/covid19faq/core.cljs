@@ -145,33 +145,41 @@
       (s/replace #"<br/?>" "\n")
       (s/replace #"</?[^>]+>" "")))
 
+(defn shorten-source-name [s]
+  (condp = s
+    "Société Française de Pharmacologie et de Thérapeutique"
+    "Société Française de Pharmacologie"
+    s))
+
 (defn bottom-links [{:keys [q r s u m]}]
-  (let [url   (.-href (.-location js/document))
-        e-str (when (and q r u url)
-                (str "mailto:"
-                     "?subject=[COVID-19] " q
-                     "&body="
-                     (s/replace
-                      (str (strip-html r)
-                           "\nSource officielle : " u
-                           "\nEnvoyé depuis : " url)
-                      #"[\n\t]" "%0D%0A%0D%0A")))]
+  (let [url     (.-href (.-location js/document))
+        short-s (shorten-source-name s)
+        e-str   (when (and q r u url)
+                  (str "mailto:"
+                       "?subject=[COVID-19] " q
+                       "&body="
+                       (s/replace
+                        (str (strip-html r)
+                             "\nSource officielle : " u
+                             "\nEnvoyé depuis : " url)
+                        #"[\n\t]" "%0D%0A%0D%0A")))]
     [:div.columns
-     [:div.column.is-4
+     [:div.column.is-6
       [:a.button.is-fullwidth.is-success.is-light.is-size-5
        {:target "new"
-        :title  (when m (str "Question relevée le " (subs m 0 10)))
-        :href   u} s]]
-     [:div.column.has-text-centered.is-4
-      [:a.button.is-fullwidth.is-warning.is-light.is-size-5
-       {:title    "Voir d'autres questions de cette source"
-        :on-click #(rfe/push-state :home nil {:source s})}
-       "Retour à cette FAQ"]]
-     [:div.column.has-text-centered.is-2
+        :title  (when m (str "Réponse en date du " (subs m 0 10)
+                             " - cliquez pour consulter la source"))
+        :href   u} (str "Source: " short-s)]]
+     [:div.column.has-text-centered.is-3
       [:a.button.is-fullwidth.is-info.is-light.is-size-5
+       {:title    "Lire d'autres questions de cette source"
+        :on-click #(rfe/push-state :home nil {:source s})}
+       "Questions de cette source"]]
+     [:div.column.has-text-centered.is-2
+      [:a.button.is-fullwidth.is-warning.is-light.is-size-5
        {:title "Envoyer la question et la réponse par email"
         :href  e-str} "📩"]]
-     [:div.column.has-text-centered.is-2
+     [:div.column.has-text-centered.is-1
       [clipboard-button "📋" "#copy-this"]]]))
 
 (defn display-answer [id]
@@ -210,7 +218,7 @@
                      (async/>! filter-chan {:query "" :source ev}))))}
    (for [s (distinct (map :s @(re-frame/subscribe [:faqs?])))]
      ^{:key (random-uuid)}
-     [:option {:value s} s])
+     [:option {:value s} (shorten-source-name s)])
    [:option {:value ""} "Tout"]])
 
 (defn main-page []
