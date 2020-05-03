@@ -182,29 +182,48 @@
      [:div.column.has-text-centered.is-1
       [clipboard-button "📋" "#copy-this"]]]))
 
+(defn send-note [id note]
+  (GET (str faq-covid-19-api-url "/note")
+       {:format        :json
+        :params        {:id id :note note}
+        :handler       (fn [r] (prn r))
+        :error-handler (fn [r] (prn r))}))
+
+(defn display-call-to-note [id]
+  [:div.columns
+   [:div.column
+    [:div.box
+     [:div.columns.has-text-centered.is-size-3
+      [:div.column
+       [:a {:title    "Ça ne m'a pas été utile"
+            :on-click #(send-note id "-1")} "😡"]]
+      [:div.column
+       [:a {:title    "Ça m'a été utile"
+            :on-click #(send-note id "1")} "😃"]]]]]])
+
 (defn display-answer [id]
-  (let [a-url  (str faq-covid-19-data-url
+  (let [answer (reagent/atom {})
+        a-url  (str faq-covid-19-data-url
                     faq-covid-19-answers-dir
-                    id ".json")
-        answer (reagent/atom {})]
+                    id ".json")]
     (fn []
-      (GET a-url :handler
-           #(reset! answer (walk/keywordize-keys %)))
+      (GET a-url :handler #(reset! answer (walk/keywordize-keys %)))
       [:div
        [:div
         {:id "copy-this"}
         [:div.columns.is-vcentered
-         [:div.column.is-multiline.is-11
+         [:div.column.has-text-centered
+          [:a.delete.is-large
+           {:title    "Fermer la question"
+            :on-click #(rfe/push-state :home)}]]
+         [:div.column.is-multiline.is-10
           [:p [:strong.is-size-4
                {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
-         [:div.column.has-text-centered
-          [:a.delete.is-large {:on-click #(rfe/push-state :home)}]]]
+         (display-call-to-note id)]
         [:br]
         [:p {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
         [:br]]
-       (if-let [a @answer]
-         [bottom-links a]
-         [:br])])))
+       (if-let [a @answer] [bottom-links a] [:br])])))
 
 (defn faq-sources-select []
   [:select.select
