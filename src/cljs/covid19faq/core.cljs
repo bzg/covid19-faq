@@ -241,7 +241,7 @@
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
                    (.focus (.getElementById js/document "search"))
-                   (reset! global-filter {:query "" :source ev})
+                   (swap! global-filter merge {:query "" :source ev})
                    (async/go
                      (async/>! filter-chan {:query "" :source ev}))))}
    (for [s (distinct (map :s @(re-frame/subscribe [:faqs?])))]
@@ -256,7 +256,7 @@
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
                    (.focus (.getElementById js/document "search"))
-                   (reset! global-filter {:query "" :sort ev})
+                   (swap! global-filter merge {:query "" :sort ev})
                    (async/go
                      (async/>! filter-chan {:query "" :sort ev}))))}
    [:option {:value "random"} "Au hasard"]
@@ -279,7 +279,7 @@
         :on-change   (fn [e]
                        (let [ev      (.-value (.-target e))
                              ev-size (count ev)]
-                         (reset! global-filter (merge @global-filter {:query ev}))
+                         (swap! global-filter merge {:query ev})
                          (when (or (= ev-size 0)
                                    (>= ev-size minimum-search-string-size))
                            (async/go
