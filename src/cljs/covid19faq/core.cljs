@@ -209,7 +209,7 @@
     (fn []
       (GET a-url :handler #(reset! answer (walk/keywordize-keys %)))
       [:div
-       [:div
+       [:article
         {:id "copy-this"}
         [:div.columns.is-vcentered
          [:div.column.has-text-centered
@@ -221,7 +221,7 @@
                {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
          (display-call-to-note id)]
         [:br]
-        [:p {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
+        [:div.content {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
         [:br]]
        (if-let [a @answer] [bottom-links a] [:br])])))
 
