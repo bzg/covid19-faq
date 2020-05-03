@@ -26,7 +26,7 @@
 (def token (atom nil))
 (def stats (atom nil))
 
-(def init-filter  {:query "" :source "" :faq ""})
+(def init-filter  {:query "" :source "" :sort "random" :faq ""})
 (def global-filter (reagent/atom init-filter))
 
 (re-frame/reg-event-db
@@ -65,6 +65,7 @@
 
 (defn apply-filter [m]
   (let [f   @(re-frame/subscribe [:filter?])
+        s   (:sort f)
         q   (:query f)
         src (:source f)
         p   (str "(?i).*(" (s/join ".*" (s/split q #"\s+")) ").*")]
@@ -79,15 +80,18 @@
                               match-against (str (:q %))]
                           (when-let [match (re-matches (re-pattern p) match-against)]
                             (let [matched (last match)
-                                  idx     (s/index-of question matched)
-                                  ]
+                                  idx     (s/index-of question matched)]
                               (assoc %
                                      :x idx
                                      :q (s/replace
                                          question (last match)
                                          (str "<b>" (last match) "</b>"))))))
                         %)))))
-      (take how-many-questions (shuffle m)))))
+      (take how-many-questions
+            (condp = s
+              "note" (reverse (sort-by :n m))
+              "hits" (reverse (sort-by :h m))
+              (shuffle m))))))
 
 (re-frame/reg-sub
  :filtered-faq?
@@ -104,12 +108,14 @@
        (merge (when-let [q (not-empty
                             (:query @global-filter))] {:query q})
               (when-let [s (not-empty
-                            (:source @global-filter))] {:source s})))
+                            (:source @global-filter))] {:source s})
+              (when-let [o (not-empty
+                            (:sort @global-filter))] {:sort o})))
       (recur (async/<! filter-chan)))))
 
 (defn display-questions []
   (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
-    (if (not (empty? questions))
+    (if (seq questions)
       [:div.table-container
        [:table.table.is-hoverable.is-fullwidth.is-striped
         [:tbody
@@ -119,7 +125,8 @@
            ^{:key (random-uuid)}
            [:tr
             [:td [:a {:tabIndex 0 :on-click #(rfe/push-state :home nil {:faq id})}
-                  [:span {:dangerouslySetInnerHTML {:__html text}}]]]])]]]
+                  [:span
+                   {:dangerouslySetInnerHTML {:__html text}}]]]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
 ;; Create a copy-to-clipboard component
@@ -185,7 +192,9 @@
 (defn send-note [id note]
   (GET (str faq-covid-19-api-url "/note")
        {:format        :json
-        :params        {:id id :note note}
+        :params        {:id    id
+                        :token @token
+                        :note  note}
         :handler       (fn [r] (prn r))
         :error-handler (fn [r] (prn r))}))
 
@@ -240,11 +249,27 @@
      [:option {:value s} (shorten-source-name s)])
    [:option {:value ""} "Tout"]])
 
+(defn faq-sort-select [sort-type]
+  [:select.select
+   {:value     sort-type ;; (or (:sort @(re-frame/subscribe [:filter?])) "")
+    :tabIndex  0
+    :on-change (fn [e]
+                 (let [ev (.-value (.-target e))]
+                   (.focus (.getElementById js/document "search"))
+                   (reset! global-filter {:query "" :sort ev})
+                   (async/go
+                     (async/>! filter-chan {:query "" :sort ev}))))}
+   [:option {:value "random"} "Au hasard"]
+   [:option {:value "note"} "Les mieux notées"]
+   [:option {:value "hits"} "Les plus consultées"]])
+
 (defn main-page []
-  (let [answer-id (:faq @(re-frame/subscribe [:filter?]))]
+  (let [filter    @(re-frame/subscribe [:filter?])
+        answer-id (:faq filter)
+        sort-type (:sort filter)]
     [:div
      [:div.columns.is-vcentered
-      [:input.input.column.is-8
+      [:input.input.column.is-7
        {:id          "search"
         :tabIndex    0
         :size        20
@@ -260,7 +285,8 @@
                            (async/go
                              (async/<! (async/timeout timeout))
                              (async/>! filter-chan {:query ev})))))}]
-      [:div.column (faq-sources-select)]]
+      [:div.column (faq-sources-select)]
+      [:div.column (faq-sort-select sort-type)]]
      [:br]
      (if (not-empty answer-id)
        (do (GET (str faq-covid-19-api-url "/hit")
@@ -272,20 +298,26 @@
            [display-answer answer-id])
        [display-questions])]))
 
+(defn faq-with-stats [m]
+  (map
+   (fn [{:keys [i] :as faq}]
+     (merge faq {:h (get-in @stats [(keyword i) :hits])
+                 :n (get-in @stats [(keyword i) :note :mean])}))
+   (walk/keywordize-keys m)))
+
 (defn main-class []
   (reagent/create-class
    {:component-did-mount
     (fn []
-      (GET (str faq-covid-19-data-url faq-covid-19-questions)
-           :handler
-           #(re-frame/dispatch
-             [:faqs! (walk/keywordize-keys %)]))
       (GET (str faq-covid-19-api-url "/stats")
            :handler
            #(reset! stats (walk/keywordize-keys %)))
       (GET (str faq-covid-19-api-url "/token")
            :handler
-           #(reset! token (or (:token (walk/keywordize-keys %)) ""))))
+           #(reset! token (or (:token (walk/keywordize-keys %)) "")))
+      (GET (str faq-covid-19-data-url faq-covid-19-questions)
+           :handler
+           #(re-frame/dispatch [:faqs! (faq-with-stats %)])))
     :reagent-render #(main-page)}))
 
 (def routes
