@@ -124,7 +124,10 @@
                          text (:q question)]]
            ^{:key (random-uuid)}
            [:tr
-            [:td [:a {:tabIndex 0 :on-click #(rfe/push-state :home nil {:faq id})}
+            [:td [:a {:tabIndex 0
+                      :on-click #(rfe/push-state
+                                  :home nil
+                                  (merge @global-filter {:faq id}))}
                   [:span
                    {:dangerouslySetInnerHTML {:__html text}}]]]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
@@ -223,8 +226,10 @@
         [:div.columns.is-vcentered
          [:div.column.has-text-centered
           [:a.delete.is-large
-           {:title    "Fermer la question"
-            :on-click #(rfe/push-state :home)}]]
+           {:title    "Revenir aux autres questions"
+            :on-click #(rfe/push-state
+                        :home nil
+                        (merge @global-filter {:faq ""}))}]]
          [:div.column.is-multiline.is-10
           [:p [:strong.is-size-4
                {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
