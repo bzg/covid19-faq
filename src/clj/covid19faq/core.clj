@@ -1,11 +1,11 @@
 (ns covid19faq.core
   (:require [hiccup.page :as h]))
 
-(def index-meta {:index-title "FAQ COVID-19 - Toutes les questions et réponses de l'administration"
+(def index-meta {:index-title "FAQ COVID-19 - Questions et réponses de l'administration publique"
                  :title       "FAQ COVID-19"
-                 :subtitle    "Toutes les questions et réponses de l'administration"
-                 :keywords    "COVID-19 FAQ administration"
-                 :description "FAQ COVID-19 - Toutes les questions et réponses de l'administration"
+                 :subtitle    "Questions et réponses de l'administration publique"
+                 :keywords    "COVID-19 questions réponses administration publique"
+                 :description "FAQ COVID-19 - Questions et réponses de l'administration publique"
                  :base-url    "/"
                  :image-url   ""
                  :email       "bzg@bzg.fr"
@@ -41,17 +41,17 @@
    [:div.columns
     [:div.column.is-4.is-offset-4
      [:div.columns
-      [:div.column [:h1.title "FAQ COVID19"]]
+      [:div.column [:h1.title "Bastien Guerry"]]
       [:div.column.has-text-centered.is-1
-       [:a {:href "https://twitter.com/bzg2", :title "Twitter"}
+       [:a {:href "https://twitter.com/bzg2", :title "Me suivre sur Twitter"}
         [:svg.icon.icon-twitter [:use {:xlink:href "#twitter"}]]]]
       [:div.column.has-text-centered.is-1
-       [:a {:href "https://github.com/bzg", :title "Github"}
+       [:a {:href "https://github.com/bzg", :title "Voir le code source de ce site"}
         [:svg.icon.icon-github [:use {:xlink:href "#github"}]]]]
       [:div.column.has-text-centered.is-1
-       [:a {:href (str "mailto:" (:email index-meta)), :title "Contacter par email"}
+       [:a {:href (str "mailto:" (:email index-meta)), :title "M'envoyer un mail (bzg@bzg.fr)"}
         [:svg.icon.icon-mail [:use {:xlink:href "#envelope"}]]]]]
-     [:p "Ce site est une initiative personnelle s'appuyant sur les ressources officielles.  Son auteur n'engage pas sa responsabilité dans l'usage fait des contenus."]]]])
+     [:p "Ce site est une initiative personnelle reprenant mot à mot les questions et réponses des sites de l'administration.  J'espère que cela vous aidera à trouver des réponses.  Je ne peux en rien être tenu responsable du mauvais usage des contenus présentés ici: référez-vous toujours aux liens officels.  Et n'hésitez pas à m'écrire pour des idées d'amélioration !"]]]])
 
 (defn default []
   (h/html5
