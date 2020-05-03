@@ -26,7 +26,7 @@
 (def token (atom nil))
 (def stats (atom nil))
 
-(def init-filter  {:query "" :source "" :sort "random" :faq ""})
+(def init-filter  {:query "" :source "" :sort "" :faq ""})
 (def global-filter (reagent/atom init-filter))
 
 (re-frame/reg-event-db
@@ -69,7 +69,7 @@
         q   (:query f)
         src (:source f)
         p   (str "(?i).*(" (s/join ".*" (s/split q #"\s+")) ").*")]
-    (if-not (and (= q "") (= "" src))
+    (if (not-empty q)
       (filter #(and (if (not-empty src) (= src (:s %)) true))
               (sort-by
                :x
@@ -202,16 +202,14 @@
         :error-handler (fn [r] (prn r))}))
 
 (defn display-call-to-note [id]
-  [:div
-   [:div.columns
-    [:div.column
-     [:a.button.is-medium.is-rounded
-      {:title    "Ça m'a été utile !"
-       :on-click #(send-note id "1")} "👍"]]
-    [:div.column
-     [:a.button.is-medium.is-rounded
-      {:title    "Ça ne m'a pas été utile..."
-       :on-click #(send-note id "-1")} "👎"]]]])
+  [:div.column
+   [:a.button.is-medium.is-rounded
+    {:title    "Ça m'a été utile !"
+     :on-click #(send-note id "1")} "👍"]
+   " "
+   [:a.button.is-medium.is-rounded
+    {:title    "Ça ne m'a pas été utile..."
+     :on-click #(send-note id "-1")} "👎"]])
 
 (defn display-answer [id]
   (let [answer (reagent/atom {})
@@ -224,13 +222,13 @@
        [:article
         {:id "copy-this"}
         [:div.columns.is-vcentered
-         [:div.column.has-text-centered
+         [:div.column.is-1.has-text-centered
           [:a.delete.is-large
            {:title    "Revenir aux autres questions"
             :on-click #(rfe/push-state
                         :home nil
                         (merge @global-filter {:faq ""}))}]]
-         [:div.column.is-multiline.is-10
+         [:div.column.is-multiline.is-9
           [:p [:strong.is-size-4
                {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
          (display-call-to-note id)]
@@ -252,7 +250,7 @@
    (for [s (distinct (map :s @(re-frame/subscribe [:faqs?])))]
      ^{:key (random-uuid)}
      [:option {:value s} (shorten-source-name s)])
-   [:option {:value ""} "Tout"]])
+   [:option {:value ""} "Toutes les questions"]])
 
 (defn faq-sort-select [sort-type]
   [:select.select
@@ -264,7 +262,7 @@
                    (swap! global-filter merge {:query "" :sort ev})
                    (async/go
                      (async/>! filter-chan {:query "" :sort ev}))))}
-   [:option {:value "random"} "Au hasard"]
+   [:option {:value ""} "Au hasard"]
    [:option {:value "note"} "Les mieux notées"]
    [:option {:value "hits"} "Les plus consultées"]])
 
@@ -274,7 +272,7 @@
         sort-type (:sort filter)]
     [:div
      [:div.columns.is-vcentered
-      [:input.input.column.is-7
+      [:input.input.column.is-6
        {:id          "search"
         :tabIndex    0
         :size        20
@@ -290,8 +288,13 @@
                            (async/go
                              (async/<! (async/timeout timeout))
                              (async/>! filter-chan {:query ev})))))}]
-      [:div.column (faq-sources-select)]
-      [:div.column (faq-sort-select sort-type)]]
+      [:div.column.is-3 (faq-sources-select)]
+      [:div.column.is-2 (faq-sort-select sort-type)]
+      [:div.column.is-1
+       [:a.delete.is-medium
+        {:title    "Effacer tous les filtres"
+         :on-click #(rfe/push-state
+                     :home nil {:query "" :sort "" :source ""})}]]]
      [:br]
      (if (not-empty answer-id)
        (do (GET (str faq-covid-19-api-url "/hit")
