@@ -3,7 +3,7 @@
 
 (def index-meta {:index-title "FAQ COVID-19 - Questions et réponses de l'administration publique"
                  :title       "FAQ COVID-19"
-                 :subtitle    "Questions et réponses de l'administration publique"
+                 :subtitle    "Les questions et réponses de l'administration publique."
                  :keywords    "COVID-19 questions réponses administration publique"
                  :description "FAQ COVID-19 - Questions et réponses de l'administration publique"
                  :base-url    "/"
@@ -41,7 +41,12 @@
    [:div.columns
     [:div.column.is-4.is-offset-4
      [:div.columns
-      [:div.column [:h1.title "Bastien Guerry"]]
+      [:div.column
+       [:h1.title.is-family-monospace
+        [:a.has-text-dark
+         {:target "new"
+          :title  "Visiter mon blog"
+          :href   "https://bzg.fr"} "Bastien Guerry"]]]
       [:div.column.has-text-centered.is-1
        [:a {:href "https://twitter.com/bzg2", :title "Me suivre sur Twitter"}
         [:svg.icon.icon-twitter [:use {:xlink:href "#twitter"}]]]]
@@ -64,8 +69,14 @@
     [:section.hero
      [:div.hero-body
       [:div.container
-       [:h1.title.has-text-centered (:title index-meta)]
-       [:h2.subtitle.column.is-8.is-offset-2.has-text-centered (:subtitle index-meta)]]]]
+       [:h1.title.has-text-centered.is-family-monospace
+        [:a.has-text-dark
+         {:class {:style "text-decoration:none;"}
+          :title "Retour à la page d'accueil"
+          :href  "/"}
+         (:title index-meta)]]
+       [:h2.subtitle.column.is-8.is-offset-2.has-text-centered
+        (:subtitle index-meta)]]]]
     [:section.section
      [:div.column.is-8.is-offset-2
       [:div {:id "app"}]]]
@@ -73,5 +84,4 @@
     (footer)]))
 
 (defn -main []
-  (spit "resources/public/index.html"
-        (default)))
+  (spit "resources/public/index.html" (default)))
