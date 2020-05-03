@@ -20,7 +20,4 @@ todo.org
 .eastwood
 .cpcache/
 *edn
-docs/js/*
-docs/css/*
-docs/fonts/*
 target/
