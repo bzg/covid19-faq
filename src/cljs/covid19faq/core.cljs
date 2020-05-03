@@ -199,16 +199,16 @@
         :error-handler (fn [r] (prn r))}))
 
 (defn display-call-to-note [id]
-  [:div.columns
-   [:div.column
-    [:div.box
-     [:div.columns.has-text-centered.is-size-3
-      [:div.column
-       [:a {:title    "Ça ne m'a pas été utile"
-            :on-click #(send-note id "-1")} "😡"]]
-      [:div.column
-       [:a {:title    "Ça m'a été utile"
-            :on-click #(send-note id "1")} "😃"]]]]]])
+  [:div
+   [:div.columns
+    [:div.column
+     [:a.button.is-medium.is-rounded
+      {:title    "Ça m'a été utile !"
+       :on-click #(send-note id "1")} "👍"]]
+    [:div.column
+     [:a.button.is-medium.is-rounded
+      {:title    "Ça ne m'a pas été utile..."
+       :on-click #(send-note id "-1")} "👎"]]]])
 
 (defn display-answer [id]
   (let [answer (reagent/atom {})
