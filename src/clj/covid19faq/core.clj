@@ -51,7 +51,7 @@
       [:div.column.has-text-centered.is-1
        [:a {:href (str "mailto:" (:email index-meta)), :title "M'envoyer un mail (bzg@bzg.fr)"}
         [:svg.icon.icon-mail [:use {:xlink:href "#envelope"}]]]]]
-     [:p "Ce site est une initiative personnelle reprenant mot à mot les questions et réponses des sites de l'administration.  J'espère que cela vous aidera à trouver des réponses.  Je ne peux en rien être tenu responsable du mauvais usage des contenus présentés ici: référez-vous toujours aux liens officels.  Et n'hésitez pas à m'écrire pour des idées d'amélioration !"]]]])
+     [:p "Ce site est une initiative personnelle reprenant mot à mot les questions et réponses des sites de l'administration.  J'espère que cela vous aidera à trouver des réponses.  Je ne peux en rien être tenu responsable du mauvais usage des contenus présentés ici: référez-vous toujours aux liens officels."]]]])
 
 (defn default []
   (h/html5
