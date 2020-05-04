@@ -30,6 +30,9 @@
 (def init-filter  {:query "" :source "" :sort "" :faq ""})
 (def global-filter (reagent/atom init-filter))
 
+(defn set-focus-on-search []
+  (.focus (.getElementById js/document "search")))
+
 (defn set-item!
   "Set `key` in browser's localStorage to `val`."
   [key val]
@@ -260,9 +263,10 @@
          [:div.column.is-1.has-text-centered
           [:a.delete.is-large
            {:title    "Revenir aux autres questions"
-            :on-click #(rfe/push-state
-                        :home nil
-                        (merge @global-filter {:faq ""}))}]]
+            :on-click #(do (rfe/push-state
+                            :home nil
+                            (merge @global-filter {:faq ""}))
+                           (set-focus-on-search))}]]
          [:div.column.is-multiline.is-9
           [:p [:strong.is-size-4
                {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
@@ -280,7 +284,7 @@
     :tabIndex  0
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
-                   (.focus (.getElementById js/document "search"))
+                   (set-focus-on-search)
                    (swap! global-filter merge {:query "" :source ev})
                    (async/go
                      (async/>! filter-chan {:query "" :source ev}))))}
@@ -295,7 +299,7 @@
     :tabIndex  0
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
-                   (.focus (.getElementById js/document "search"))
+                   (set-focus-on-search)
                    (swap! global-filter merge {:query "" :sort ev})
                    (async/go
                      (async/>! filter-chan {:query "" :sort ev}))))}
@@ -330,7 +334,8 @@
       [:div.column.is-1
        [:a.delete.is-medium
         {:title    "Effacer tous les filtres"
-         :on-click #(rfe/push-state :home)}]]]
+         :on-click #(do (rfe/push-state :home)
+                        (set-focus-on-search))}]]]
      [:br]
      (if (not-empty answer-id)
        (do (GET (str faq-covid-19-api-url "/hit")
@@ -379,4 +384,4 @@
   (reagent.dom/render
    [main-class]
    (. js/document (getElementById "app")))
-  (.focus (.getElementById js/document "search")))
+  (set-focus-on-search))
