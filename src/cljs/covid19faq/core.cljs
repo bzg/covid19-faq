@@ -33,6 +33,9 @@
 (defn set-focus-on-search []
   (.focus (.getElementById js/document "search")))
 
+(defn clean-state [m]
+  (apply dissoc m (for [[k v] m :when (empty? v)] k)))
+
 (defn set-item!
   "Set `key` in browser's localStorage to `val`."
   [key val]
@@ -83,34 +86,31 @@
  (fn [db _] (:faqs db)))
 
 (defn apply-filter [m]
-  (let [f   @(re-frame/subscribe [:filter?])
-        s   (:sort f)
-        q   (:query f)
-        src (:source f)
-        p   (str "(?i).*(" (s/join ".*" (s/split q #"\s+")) ").*")]
-    (if (not-empty q)
-      (filter #(and (if (not-empty src) (= src (:s %)) true))
-              (sort-by
-               :x
-               (->> m
-                    (map
-                     #(if (not-empty q)
-                        (let [question      (:q %)
-                              match-against (str (:q %))]
-                          (when-let [match (re-matches (re-pattern p) match-against)]
-                            (let [matched (last match)
-                                  idx     (s/index-of question matched)]
-                              (assoc %
-                                     :x idx
-                                     :q (s/replace
-                                         question (last match)
-                                         (str "<b>" (last match) "</b>"))))))
-                        %)))))
-      (take how-many-questions
-            (condp = s
-              "note" (reverse (sort-by :n m))
-              "hits" (reverse (sort-by :h m))
-              (shuffle m))))))
+  (let [{:keys [sort query source]}
+        @(re-frame/subscribe [:filter?])
+        p  (str "(?i).*(" (s/join ".*" (s/split query #"\s+")) ").*")
+        f0 (filter #(and (if (not-empty source) (= source (:s %)) true))
+                   (sort-by
+                    :x
+                    (->> m
+                         (map
+                          #(if (not-empty query)
+                             (let [question      (:q %)
+                                   match-against (str (:q %))]
+                               (when-let [match (re-matches (re-pattern p) match-against)]
+                                 (let [matched (last match)
+                                       idx     (s/index-of question matched)]
+                                   (assoc %
+                                          :x idx
+                                          :q (s/replace
+                                              question (last match)
+                                              (str "<b>" (last match) "</b>"))))))
+                             %)))))]
+    (take how-many-questions
+          (condp = sort
+            "note" (reverse (sort-by :n f0))
+            "hits" (reverse (sort-by :h f0))
+            (shuffle f0)))))
 
 (re-frame/reg-sub
  :filtered-faq?
@@ -146,7 +146,8 @@
             [:td [:a {:tabIndex 0
                       :on-click #(rfe/push-state
                                   :home nil
-                                  (merge @global-filter {:faq id}))}
+                                  (clean-state
+                                   (merge @global-filter {:faq id})))}
                   [:span
                    {:dangerouslySetInnerHTML {:__html text}}]]]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
@@ -204,7 +205,8 @@
        {:title    "Lire d'autres questions de cette source"
         :on-click #(rfe/push-state
                     :home nil
-                    (merge @global-filter {:faq "" :source s}))}
+                    (clean-state
+                     (merge @global-filter {:faq "" :source s})))}
        "Questions de cette source"]]
      [:div.column.has-text-centered.is-2
       [:a.button.is-fullwidth.is-warning.is-light.is-size-5
@@ -265,7 +267,7 @@
            {:title    "Revenir aux autres questions"
             :on-click #(do (rfe/push-state
                             :home nil
-                            (merge @global-filter {:faq ""}))
+                            (clean-state (dissoc @global-filter :faq)))
                            (set-focus-on-search))}]]
          [:div.column.is-multiline.is-9
           [:p [:strong.is-size-4
@@ -295,7 +297,7 @@
 
 (defn faq-sort-select [sort-type]
   [:select.select
-   {:value     sort-type ;; (or (:sort @(re-frame/subscribe [:filter?])) "")
+   {:value     sort-type
     :tabIndex  0
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
