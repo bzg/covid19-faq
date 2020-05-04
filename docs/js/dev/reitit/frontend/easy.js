@@ -1,10 +1,11 @@
-// Compiled by ClojureScript 1.10.597 {}
+// Compiled by ClojureScript 1.10.597 {:static-fns true, :optimize-constants true}
 goog.provide('reitit.frontend.easy');
 goog.require('cljs.core');
+goog.require('cljs.core.constants');
 goog.require('reitit.frontend.history');
 if((typeof reitit !== 'undefined') && (typeof reitit.frontend !== 'undefined') && (typeof reitit.frontend.easy !== 'undefined') && (typeof reitit.frontend.easy.history !== 'undefined')){
 } else {
-reitit.frontend.easy.history = cljs.core.atom.call(null,null);
+reitit.frontend.easy.history = cljs.core.atom.cljs$core$IFn$_invoke$arity$1(null);
 }
 /**
  * This registers event listeners on HTML5 history and hashchange events.
@@ -20,15 +21,15 @@ reitit.frontend.easy.history = cljs.core.atom.call(null,null);
  *   - :use-fragment  (default true) If true, onhashchange and location hash are used to store the token.
  */
 reitit.frontend.easy.start_BANG_ = (function reitit$frontend$easy$start_BANG_(router,on_navigate,opts){
-return cljs.core.swap_BANG_.call(null,reitit.frontend.easy.history,(function (old_history){
-reitit.frontend.history.stop_BANG_.call(null,old_history);
+return cljs.core.swap_BANG_.cljs$core$IFn$_invoke$arity$2(reitit.frontend.easy.history,(function (old_history){
+reitit.frontend.history.stop_BANG_(old_history);
 
-return reitit.frontend.history.start_BANG_.call(null,router,on_navigate,opts);
+return reitit.frontend.history.start_BANG_.cljs$core$IFn$_invoke$arity$3(router,on_navigate,opts);
 }));
 });
 reitit.frontend.easy.href = (function reitit$frontend$easy$href(var_args){
-var G__19449 = arguments.length;
-switch (G__19449) {
+var G__21141 = arguments.length;
+switch (G__21141) {
 case 1:
 return reitit.frontend.easy.href.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -48,15 +49,15 @@ throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(
 });
 
 (reitit.frontend.easy.href.cljs$core$IFn$_invoke$arity$1 = (function (k){
-return reitit.frontend.history.href.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,null,null);
+return reitit.frontend.history.href.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,null,null);
 }));
 
 (reitit.frontend.easy.href.cljs$core$IFn$_invoke$arity$2 = (function (k,params){
-return reitit.frontend.history.href.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,params,null);
+return reitit.frontend.history.href.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,params,null);
 }));
 
 (reitit.frontend.easy.href.cljs$core$IFn$_invoke$arity$3 = (function (k,params,query){
-return reitit.frontend.history.href.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,params,query);
+return reitit.frontend.history.href.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,params,query);
 }));
 
 (reitit.frontend.easy.href.cljs$lang$maxFixedArity = 3);
@@ -65,8 +66,8 @@ return reitit.frontend.history.href.call(null,cljs.core.deref.call(null,reitit.f
  * Sets the new route, leaving previous route in history.
  */
 reitit.frontend.easy.push_state = (function reitit$frontend$easy$push_state(var_args){
-var G__19452 = arguments.length;
-switch (G__19452) {
+var G__21144 = arguments.length;
+switch (G__21144) {
 case 1:
 return reitit.frontend.easy.push_state.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -86,15 +87,15 @@ throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(
 });
 
 (reitit.frontend.easy.push_state.cljs$core$IFn$_invoke$arity$1 = (function (k){
-return reitit.frontend.history.push_state.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,null,null);
+return reitit.frontend.history.push_state.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,null,null);
 }));
 
 (reitit.frontend.easy.push_state.cljs$core$IFn$_invoke$arity$2 = (function (k,params){
-return reitit.frontend.history.push_state.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,params,null);
+return reitit.frontend.history.push_state.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,params,null);
 }));
 
 (reitit.frontend.easy.push_state.cljs$core$IFn$_invoke$arity$3 = (function (k,params,query){
-return reitit.frontend.history.push_state.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,params,query);
+return reitit.frontend.history.push_state.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,params,query);
 }));
 
 (reitit.frontend.easy.push_state.cljs$lang$maxFixedArity = 3);
@@ -103,8 +104,8 @@ return reitit.frontend.history.push_state.call(null,cljs.core.deref.call(null,re
  * Replaces current route. I.e. current route is not left on history.
  */
 reitit.frontend.easy.replace_state = (function reitit$frontend$easy$replace_state(var_args){
-var G__19455 = arguments.length;
-switch (G__19455) {
+var G__21147 = arguments.length;
+switch (G__21147) {
 case 1:
 return reitit.frontend.easy.replace_state.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -124,18 +125,16 @@ throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(
 });
 
 (reitit.frontend.easy.replace_state.cljs$core$IFn$_invoke$arity$1 = (function (k){
-return reitit.frontend.history.replace_state.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,null,null);
+return reitit.frontend.history.replace_state.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,null,null);
 }));
 
 (reitit.frontend.easy.replace_state.cljs$core$IFn$_invoke$arity$2 = (function (k,params){
-return reitit.frontend.history.replace_state.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,params,null);
+return reitit.frontend.history.replace_state.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,params,null);
 }));
 
 (reitit.frontend.easy.replace_state.cljs$core$IFn$_invoke$arity$3 = (function (k,params,query){
-return reitit.frontend.history.replace_state.call(null,cljs.core.deref.call(null,reitit.frontend.easy.history),k,params,query);
+return reitit.frontend.history.replace_state.cljs$core$IFn$_invoke$arity$4(cljs.core.deref(reitit.frontend.easy.history),k,params,query);
 }));
 
 (reitit.frontend.easy.replace_state.cljs$lang$maxFixedArity = 3);
 
-
-//# sourceMappingURL=easy.js.map

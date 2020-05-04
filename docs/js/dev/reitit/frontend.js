@@ -1,6 +1,7 @@
-// Compiled by ClojureScript 1.10.597 {}
+// Compiled by ClojureScript 1.10.597 {:static-fns true, :optimize-constants true}
 goog.provide('reitit.frontend');
 goog.require('cljs.core');
+goog.require('cljs.core.constants');
 goog.require('clojure.set');
 goog.require('reitit.coercion');
 goog.require('reitit.core');
@@ -11,7 +12,7 @@ var vs = q.getValues(k);
 if((vs.length < (2))){
 return (vs[(0)]);
 } else {
-return cljs.core.vec.call(null,vs);
+return cljs.core.vec(vs);
 }
 });
 /**
@@ -19,8 +20,8 @@ return cljs.core.vec.call(null,vs);
  */
 reitit.frontend.query_params = (function reitit$frontend$query_params(uri){
 var q = uri.getQueryData();
-return cljs.core.into.call(null,cljs.core.PersistentArrayMap.EMPTY,cljs.core.map.call(null,cljs.core.juxt.call(null,cljs.core.keyword,(function (p1__13863_SHARP_){
-return reitit.frontend.query_param.call(null,q,p1__13863_SHARP_);
+return cljs.core.into.cljs$core$IFn$_invoke$arity$2(cljs.core.PersistentArrayMap.EMPTY,cljs.core.map.cljs$core$IFn$_invoke$arity$2(cljs.core.juxt.cljs$core$IFn$_invoke$arity$2(cljs.core.keyword,(function (p1__15405_SHARP_){
+return reitit.frontend.query_param(q,p1__15405_SHARP_);
 })),q.getKeys()));
 });
 /**
@@ -29,19 +30,19 @@ return reitit.frontend.query_param.call(null,q,p1__13863_SHARP_);
  */
 reitit.frontend.match_by_path = (function reitit$frontend$match_by_path(router,path){
 var uri = goog.Uri.parse(path);
-var temp__5733__auto__ = reitit.core.match_by_path.call(null,router,uri.getPath());
+var temp__5733__auto__ = reitit.core.match_by_path(router,uri.getPath());
 if(cljs.core.truth_(temp__5733__auto__)){
 var match = temp__5733__auto__;
-var q = reitit.frontend.query_params.call(null,uri);
-var match__$1 = cljs.core.assoc.call(null,match,new cljs.core.Keyword(null,"query-params","query-params",900640534),q);
-var parameters = (function (){var or__4185__auto__ = reitit.coercion.coerce_BANG_.call(null,match__$1);
+var q = reitit.frontend.query_params(uri);
+var match__$1 = cljs.core.assoc.cljs$core$IFn$_invoke$arity$3(match,cljs.core.cst$kw$query_DASH_params,q);
+var parameters = (function (){var or__4185__auto__ = reitit.coercion.coerce_BANG_(match__$1);
 if(cljs.core.truth_(or__4185__auto__)){
 return or__4185__auto__;
 } else {
-return new cljs.core.PersistentArrayMap(null, 2, [new cljs.core.Keyword(null,"path","path",-188191168),new cljs.core.Keyword(null,"path-params","path-params",-48130597).cljs$core$IFn$_invoke$arity$1(match__$1),new cljs.core.Keyword(null,"query","query",-1288509510),q], null);
+return new cljs.core.PersistentArrayMap(null, 2, [cljs.core.cst$kw$path,cljs.core.cst$kw$path_DASH_params.cljs$core$IFn$_invoke$arity$1(match__$1),cljs.core.cst$kw$query,q], null);
 }
 })();
-return cljs.core.assoc.call(null,match__$1,new cljs.core.Keyword(null,"parameters","parameters",-1229919748),parameters);
+return cljs.core.assoc.cljs$core$IFn$_invoke$arity$3(match__$1,cljs.core.cst$kw$parameters,parameters);
 } else {
 return null;
 }
@@ -52,8 +53,8 @@ return null;
  *   or `nil` (no match).
  */
 reitit.frontend.match_by_name = (function reitit$frontend$match_by_name(var_args){
-var G__13865 = arguments.length;
-switch (G__13865) {
+var G__15407 = arguments.length;
+switch (G__15407) {
 case 2:
 return reitit.frontend.match_by_name.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),(arguments[(1)]));
 
@@ -69,11 +70,11 @@ throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(
 });
 
 (reitit.frontend.match_by_name.cljs$core$IFn$_invoke$arity$2 = (function (router,name){
-return reitit.frontend.match_by_name.call(null,router,name,cljs.core.PersistentArrayMap.EMPTY);
+return reitit.frontend.match_by_name.cljs$core$IFn$_invoke$arity$3(router,name,cljs.core.PersistentArrayMap.EMPTY);
 }));
 
 (reitit.frontend.match_by_name.cljs$core$IFn$_invoke$arity$3 = (function (router,name,path_params){
-return reitit.core.match_by_name.call(null,router,name,path_params);
+return reitit.core.match_by_name.cljs$core$IFn$_invoke$arity$3(router,name,path_params);
 }));
 
 (reitit.frontend.match_by_name.cljs$lang$maxFixedArity = 3);
@@ -83,8 +84,8 @@ return reitit.core.match_by_name.call(null,router,name,path_params);
  *   Enables request coercion. See [[reitit.core/router]] for details on options.
  */
 reitit.frontend.router = (function reitit$frontend$router(var_args){
-var G__13868 = arguments.length;
-switch (G__13868) {
+var G__15410 = arguments.length;
+switch (G__15410) {
 case 1:
 return reitit.frontend.router.cljs$core$IFn$_invoke$arity$1((arguments[(0)]));
 
@@ -100,11 +101,11 @@ throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(
 });
 
 (reitit.frontend.router.cljs$core$IFn$_invoke$arity$1 = (function (raw_routes){
-return reitit.frontend.router.call(null,raw_routes,cljs.core.PersistentArrayMap.EMPTY);
+return reitit.frontend.router.cljs$core$IFn$_invoke$arity$2(raw_routes,cljs.core.PersistentArrayMap.EMPTY);
 }));
 
 (reitit.frontend.router.cljs$core$IFn$_invoke$arity$2 = (function (raw_routes,opts){
-return reitit.core.router.call(null,raw_routes,cljs.core.merge.call(null,new cljs.core.PersistentArrayMap(null, 1, [new cljs.core.Keyword(null,"compile","compile",608186429),reitit.coercion.compile_request_coercers], null),opts));
+return reitit.core.router.cljs$core$IFn$_invoke$arity$2(raw_routes,cljs.core.merge.cljs$core$IFn$_invoke$arity$variadic(cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2([new cljs.core.PersistentArrayMap(null, 1, [cljs.core.cst$kw$compile,reitit.coercion.compile_request_coercers], null),opts], 0)));
 }));
 
 (reitit.frontend.router.cljs$lang$maxFixedArity = 2);
@@ -113,8 +114,8 @@ return reitit.core.router.call(null,raw_routes,cljs.core.merge.call(null,new clj
  * Logs problems using console.warn
  */
 reitit.frontend.match_by_name_BANG_ = (function reitit$frontend$match_by_name_BANG_(var_args){
-var G__13872 = arguments.length;
-switch (G__13872) {
+var G__15414 = arguments.length;
+switch (G__15414) {
 case 2:
 return reitit.frontend.match_by_name_BANG_.cljs$core$IFn$_invoke$arity$2((arguments[(0)]),(arguments[(1)]));
 
@@ -130,22 +131,22 @@ throw (new Error(["Invalid arity: ",cljs.core.str.cljs$core$IFn$_invoke$arity$1(
 });
 
 (reitit.frontend.match_by_name_BANG_.cljs$core$IFn$_invoke$arity$2 = (function (router,name){
-return reitit.frontend.match_by_name_BANG_.call(null,router,name,cljs.core.PersistentArrayMap.EMPTY);
+return reitit.frontend.match_by_name_BANG_.cljs$core$IFn$_invoke$arity$3(router,name,cljs.core.PersistentArrayMap.EMPTY);
 }));
 
 (reitit.frontend.match_by_name_BANG_.cljs$core$IFn$_invoke$arity$3 = (function (router,name,path_params){
-var temp__5733__auto__ = reitit.frontend.match_by_name.call(null,router,name,path_params);
+var temp__5733__auto__ = reitit.frontend.match_by_name.cljs$core$IFn$_invoke$arity$3(router,name,path_params);
 if(cljs.core.truth_(temp__5733__auto__)){
 var match = temp__5733__auto__;
-if(reitit.core.partial_match_QMARK_.call(null,match)){
-if(cljs.core.every_QMARK_.call(null,(function (p1__13870_SHARP_){
-return cljs.core.contains_QMARK_.call(null,path_params,p1__13870_SHARP_);
-}),new cljs.core.Keyword(null,"required","required",1807647006).cljs$core$IFn$_invoke$arity$1(match))){
+if(reitit.core.partial_match_QMARK_(match)){
+if(cljs.core.every_QMARK_((function (p1__15412_SHARP_){
+return cljs.core.contains_QMARK_(path_params,p1__15412_SHARP_);
+}),cljs.core.cst$kw$required.cljs$core$IFn$_invoke$arity$1(match))){
 return match;
 } else {
-var defined = cljs.core.set.call(null,cljs.core.keys.call(null,path_params));
-var missing = clojure.set.difference.call(null,new cljs.core.Keyword(null,"required","required",1807647006).cljs$core$IFn$_invoke$arity$1(match),defined);
-console.warn("missing path-params for route",name,new cljs.core.PersistentArrayMap(null, 4, [new cljs.core.Keyword(null,"template","template",-702405684),new cljs.core.Keyword(null,"template","template",-702405684).cljs$core$IFn$_invoke$arity$1(match),new cljs.core.Keyword(null,"missing","missing",362507769),missing,new cljs.core.Keyword(null,"path-params","path-params",-48130597),path_params,new cljs.core.Keyword(null,"required","required",1807647006),new cljs.core.Keyword(null,"required","required",1807647006).cljs$core$IFn$_invoke$arity$1(match)], null));
+var defined = cljs.core.set(cljs.core.keys(path_params));
+var missing = clojure.set.difference.cljs$core$IFn$_invoke$arity$2(cljs.core.cst$kw$required.cljs$core$IFn$_invoke$arity$1(match),defined);
+console.warn("missing path-params for route",name,new cljs.core.PersistentArrayMap(null, 4, [cljs.core.cst$kw$template,cljs.core.cst$kw$template.cljs$core$IFn$_invoke$arity$1(match),cljs.core.cst$kw$missing,missing,cljs.core.cst$kw$path_DASH_params,path_params,cljs.core.cst$kw$required,cljs.core.cst$kw$required.cljs$core$IFn$_invoke$arity$1(match)], null));
 
 return null;
 }
@@ -161,5 +162,3 @@ return null;
 
 (reitit.frontend.match_by_name_BANG_.cljs$lang$maxFixedArity = 3);
 
-
-//# sourceMappingURL=frontend.js.map

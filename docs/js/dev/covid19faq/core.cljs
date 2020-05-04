@@ -25,9 +25,31 @@
 
 (def token (atom nil))
 (def stats (atom nil))
+(def noted (atom {}))
 
-(def init-filter  {:query "" :source "" :faq ""})
+(def init-filter  {:query "" :source "" :sort "" :faq ""})
 (def global-filter (reagent/atom init-filter))
+
+(defn set-focus-on-search []
+  (.focus (.getElementById js/document "search")))
+
+(defn clean-state [m]
+  (apply dissoc m (for [[k v] m :when (empty? v)] k)))
+
+(defn set-item!
+  "Set `key` in browser's localStorage to `val`."
+  [key val]
+  (.setItem (.-localStorage js/window) key (.stringify js/JSON (clj->js val))))
+
+(defn get-item
+  "Return the value of `key` from browser's localStorage."
+  [key]
+  (js->clj (.parse js/JSON (.getItem (.-localStorage js/window) key))))
+
+(defn remove-item!
+  "Remove the browser's localStorage value for the given `key`."
+  [key]
+  (.removeItem (.-localStorage js/window) key))
 
 (re-frame/reg-event-db
  :initialize-db!
@@ -64,30 +86,31 @@
  (fn [db _] (:faqs db)))
 
 (defn apply-filter [m]
-  (let [f   @(re-frame/subscribe [:filter?])
-        q   (:query f)
-        src (:source f)
-        p   (str "(?i).*(" (s/join ".*" (s/split q #"\s+")) ").*")]
-    (if-not (and (= q "") (= "" src))
-      (filter #(and (if (not-empty src) (= src (:s %)) true))
-              (sort-by
-               :x
-               (->> m
-                    (map
-                     #(if (not-empty q)
-                        (let [question      (:q %)
-                              match-against (str (:q %))]
-                          (when-let [match (re-matches (re-pattern p) match-against)]
-                            (let [matched (last match)
-                                  idx     (s/index-of question matched)
-                                  ]
-                              (assoc %
-                                     :x idx
-                                     :q (s/replace
-                                         question (last match)
-                                         (str "<b>" (last match) "</b>"))))))
-                        %)))))
-      (take how-many-questions (shuffle m)))))
+  (let [{:keys [sort query source]}
+        @(re-frame/subscribe [:filter?])
+        p  (str "(?i).*(" (s/join ".*" (s/split query #"\s+")) ").*")
+        f0 (filter #(and (if (not-empty source) (= source (:s %)) true))
+                   (sort-by
+                    :x
+                    (->> m
+                         (map
+                          #(if (not-empty query)
+                             (let [question      (:q %)
+                                   match-against (str (:q %))]
+                               (when-let [match (re-matches (re-pattern p) match-against)]
+                                 (let [matched (last match)
+                                       idx     (s/index-of question matched)]
+                                   (assoc %
+                                          :x idx
+                                          :q (s/replace
+                                              question (last match)
+                                              (str "<b>" (last match) "</b>"))))))
+                             %)))))]
+    (take how-many-questions
+          (condp = sort
+            "note" (reverse (sort-by :n f0))
+            "hits" (reverse (sort-by :h f0))
+            (shuffle f0)))))
 
 (re-frame/reg-sub
  :filtered-faq?
@@ -104,12 +127,14 @@
        (merge (when-let [q (not-empty
                             (:query @global-filter))] {:query q})
               (when-let [s (not-empty
-                            (:source @global-filter))] {:source s})))
+                            (:source @global-filter))] {:source s})
+              (when-let [o (not-empty
+                            (:sort @global-filter))] {:sort o})))
       (recur (async/<! filter-chan)))))
 
 (defn display-questions []
   (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
-    (if (not (empty? questions))
+    (if (seq questions)
       [:div.table-container
        [:table.table.is-hoverable.is-fullwidth.is-striped
         [:tbody
@@ -118,8 +143,13 @@
                          text (:q question)]]
            ^{:key (random-uuid)}
            [:tr
-            [:td [:a {:tabIndex 0 :on-click #(rfe/push-state :home nil {:faq id})}
-                  [:span {:dangerouslySetInnerHTML {:__html text}}]]]])]]]
+            [:td [:a {:tabIndex 0
+                      :on-click #(rfe/push-state
+                                  :home nil
+                                  (clean-state
+                                   (merge @global-filter {:faq id})))}
+                  [:span
+                   {:dangerouslySetInnerHTML {:__html text}}]]]])]]]
       [:p "Aucune question n'a été trouvée : peut-être une faute de frappe ?"])))
 
 ;; Create a copy-to-clipboard component
@@ -173,7 +203,10 @@
      [:div.column.has-text-centered.is-3
       [:a.button.is-fullwidth.is-info.is-light.is-size-5
        {:title    "Lire d'autres questions de cette source"
-        :on-click #(rfe/push-state :home nil {:source s})}
+        :on-click #(rfe/push-state
+                    :home nil
+                    (clean-state
+                     (merge @global-filter {:faq "" :source s})))}
        "Questions de cette source"]]
      [:div.column.has-text-centered.is-2
       [:a.button.is-fullwidth.is-warning.is-light.is-size-5
@@ -184,22 +217,39 @@
 
 (defn send-note [id note]
   (GET (str faq-covid-19-api-url "/note")
-       {:format        :json
-        :params        {:id id :note note}
-        :handler       (fn [r] (prn r))
-        :error-handler (fn [r] (prn r))}))
+       {:format :json
+        :params {:id    id
+                 :token @token
+                 :note  note}
+        :handler
+        (fn [r] (condp = (:response (walk/keywordize-keys r))
+                  "OK" (do (swap! noted conj {id note})
+                           (set-item! :noted @noted))
+                  (prn "Error while sending the note")))
+        :error-handler
+        (fn [r] (prn (:response (walk/keywordize-keys r))))}))
 
-(defn display-call-to-note [id]
-  [:div.columns
-   [:div.column
-    [:div.box
-     [:div.columns.has-text-centered.is-size-3
-      [:div.column
-       [:a {:title    "Ça ne m'a pas été utile"
-            :on-click #(send-note id "-1")} "😡"]]
-      [:div.column
-       [:a {:title    "Ça m'a été utile"
-            :on-click #(send-note id "1")} "😃"]]]]]])
+(defn display-call-to-note [id & [inactive?]]
+  (let [ok    "🙂"
+        notok "🤔"
+        space "   "]
+    (if inactive?
+      [:div.column.has-text-centered
+       [:a.is-size-3
+        {:title "Mon appréciation précédente"}
+        (if (= "1" (get (get-item :noted) id)) ok notok)]
+       space
+       [:a.is-size-3
+        {:title    "Je veux revoter !"
+         :on-click #(swap! noted dissoc id)} "🚮"]]
+      [:div.column.has-text-centered
+       [:a.is-size-3
+        {:title    "Ça m'a été utile !"
+         :on-click #(send-note id "1")} ok]
+       space
+       [:a.is-size-3
+        {:title    "Ça ne m'a pas été utile..."
+         :on-click #(send-note id "-1")} notok]])))
 
 (defn display-answer [id]
   (let [answer (reagent/atom {})
@@ -212,14 +262,19 @@
        [:article
         {:id "copy-this"}
         [:div.columns.is-vcentered
-         [:div.column.has-text-centered
+         [:div.column.is-1.has-text-centered
           [:a.delete.is-large
-           {:title    "Fermer la question"
-            :on-click #(rfe/push-state :home)}]]
-         [:div.column.is-multiline.is-10
+           {:title    "Revenir aux autres questions"
+            :on-click #(do (rfe/push-state
+                            :home nil
+                            (clean-state (dissoc @global-filter :faq)))
+                           (set-focus-on-search))}]]
+         [:div.column.is-multiline.is-9
           [:p [:strong.is-size-4
                {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
-         (display-call-to-note id)]
+         (if (contains? @noted id)
+           (display-call-to-note id "inactive")
+           (display-call-to-note id))]
         [:br]
         [:div.content {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
         [:br]]
@@ -231,20 +286,36 @@
     :tabIndex  0
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
-                   (.focus (.getElementById js/document "search"))
-                   (reset! global-filter {:query "" :source ev})
+                   (set-focus-on-search)
+                   (swap! global-filter merge {:query "" :source ev})
                    (async/go
                      (async/>! filter-chan {:query "" :source ev}))))}
    (for [s (distinct (map :s @(re-frame/subscribe [:faqs?])))]
      ^{:key (random-uuid)}
      [:option {:value s} (shorten-source-name s)])
-   [:option {:value ""} "Tout"]])
+   [:option {:value ""} "Toutes les questions"]])
+
+(defn faq-sort-select [sort-type]
+  [:select.select
+   {:value     sort-type
+    :tabIndex  0
+    :on-change (fn [e]
+                 (let [ev (.-value (.-target e))]
+                   (set-focus-on-search)
+                   (swap! global-filter merge {:query "" :sort ev})
+                   (async/go
+                     (async/>! filter-chan {:query "" :sort ev}))))}
+   [:option {:value ""} "Au hasard"]
+   [:option {:value "note"} "Les mieux notées"]
+   [:option {:value "hits"} "Les plus consultées"]])
 
 (defn main-page []
-  (let [answer-id (:faq @(re-frame/subscribe [:filter?]))]
+  (let [filter    @(re-frame/subscribe [:filter?])
+        answer-id (:faq filter)
+        sort-type (:sort filter)]
     [:div
      [:div.columns.is-vcentered
-      [:input.input.column.is-8
+      [:input.input.column.is-6
        {:id          "search"
         :tabIndex    0
         :size        20
@@ -254,13 +325,19 @@
         :on-change   (fn [e]
                        (let [ev      (.-value (.-target e))
                              ev-size (count ev)]
-                         (reset! global-filter (merge @global-filter {:query ev}))
+                         (swap! global-filter merge {:query ev})
                          (when (or (= ev-size 0)
                                    (>= ev-size minimum-search-string-size))
                            (async/go
                              (async/<! (async/timeout timeout))
                              (async/>! filter-chan {:query ev})))))}]
-      [:div.column (faq-sources-select)]]
+      [:div.column.is-3 (faq-sources-select)]
+      [:div.column.is-2 (faq-sort-select sort-type)]
+      [:div.column.is-1
+       [:a.delete.is-medium
+        {:title    "Effacer tous les filtres"
+         :on-click #(do (rfe/push-state :home)
+                        (set-focus-on-search))}]]]
      [:br]
      (if (not-empty answer-id)
        (do (GET (str faq-covid-19-api-url "/hit")
@@ -272,29 +349,33 @@
            [display-answer answer-id])
        [display-questions])]))
 
+(defn faq-with-stats [m]
+  (map
+   (fn [{:keys [i] :as faq}]
+     (merge faq {:h (get-in @stats [(keyword i) :hits])
+                 :n (get-in @stats [(keyword i) :note :mean])}))
+   (walk/keywordize-keys m)))
+
 (defn main-class []
   (reagent/create-class
    {:component-did-mount
     (fn []
-      (GET (str faq-covid-19-data-url faq-covid-19-questions)
-           :handler
-           #(re-frame/dispatch
-             [:faqs! (walk/keywordize-keys %)]))
       (GET (str faq-covid-19-api-url "/stats")
            :handler
            #(reset! stats (walk/keywordize-keys %)))
       (GET (str faq-covid-19-api-url "/token")
            :handler
-           #(reset! token (or (:token (walk/keywordize-keys %)) ""))))
+           #(reset! token (or (:token (walk/keywordize-keys %)) "")))
+      (GET (str faq-covid-19-data-url faq-covid-19-questions)
+           :handler
+           #(re-frame/dispatch [:faqs! (faq-with-stats %)])))
     :reagent-render #(main-page)}))
 
 (def routes
   [["" :home]])
 
 (defn on-navigate [match]
-  (let [target-page (:name (:data match))
-        params      (:query-params match)]
-    (re-frame/dispatch [:view! (keyword target-page) params])))
+  (re-frame/dispatch [:view! :home (:query-params match)]))
 
 (defn ^:export init []
   (re-frame/clear-subscription-cache!)
@@ -305,4 +386,4 @@
   (reagent.dom/render
    [main-class]
    (. js/document (getElementById "app")))
-  (.focus (.getElementById js/document "search")))
+  (set-focus-on-search))
