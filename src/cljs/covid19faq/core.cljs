@@ -19,6 +19,7 @@
 (defonce minimum-search-string-size 3)
 
 (defonce faq-covid-19-api-url "https://api.covid19-faq.fr")
+;; (defonce faq-covid-19-api-url "http://localhost:3000")
 (defonce faq-covid-19-data-url "https://bzg.github.io/covid19-faq-data/")
 (defonce faq-covid-19-questions "faq-questions.json")
 (defonce faq-covid-19-answers-dir "answers/")
@@ -227,8 +228,9 @@
         :handler
         (fn [r] (condp = (:response (walk/keywordize-keys r))
                   "OK" (do (swap! noted conj {id note})
-                           (set-item! :noted @noted))
-                  (prn "Error while sending the note")))
+                           (set-item! :noted @noted)
+                           (println "Note stored"))
+                  (println "Error while sending the note")))
         :error-handler
         (fn [r] (prn (:response (walk/keywordize-keys r))))}))
 
