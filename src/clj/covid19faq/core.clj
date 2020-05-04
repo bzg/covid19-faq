@@ -49,7 +49,7 @@
        [:a {:href "https://twitter.com/bzg2", :title "Me suivre sur Twitter"}
         [:svg.icon.icon-twitter [:use {:xlink:href "#twitter"}]]]]
       [:div.column.has-text-centered.is-1
-       [:a {:href "https://github.com/bzg", :title "Voir le code source de ce site"}
+       [:a {:href "https://github.com/bzg/covid19-faq", :title "Voir le code source de ce site"}
         [:svg.icon.icon-github [:use {:xlink:href "#github"}]]]]
       [:div.column.has-text-centered.is-1
        [:a {:href (str "mailto:" (:email index-meta)), :title "M'envoyer un mail (bzg@bzg.fr)"}
