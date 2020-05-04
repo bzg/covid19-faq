@@ -1,16 +1,39 @@
-* TODO
-* Contribute
+* Les FAQs des administrations publiques
 
-Your help is welcome.  You can contribute with bug reports, pull
-requests or feature requests.
+Ce dépôt contient le code source l'application web disponible sur
+[[https://www.covid19-faq.fr]] et qui se nourrit des questions/réponses de
+plusieurs organismes publics :
 
-* Support the Clojure(script) ecosystem
+- URSSAF
+- Pôle Emploi
+- gouvernement.fr
+- education.gouv.fr
+- associations.gouv.fr
+- travail-emploi.gouv.fr
+- handicap.gouv.fr
+- etudiant.gouv.fr
+- solidarites-sante.gouv.fr
+- sfpt-fr.org
+- defense.gouv.fr
+- economie.gouv.fr
 
-If you like Clojure(script), please consider supporting maintainers by
-donating to [[https://www.clojuriststogether.org][clojuriststogether.org]].
+Le code source pour la collecte de ces questions/réponses et leur mise
+à disposition sous forme d'API est lisible [[https://github.com/bzg/covid19-faq-data][sur ce dépôt]].
 
-* License
+* Contribuer
 
-2020 DINUM, Bastien Guerry.
+Votre aide est la bienvenue.  Vous pouvez contribuer en ouvrant une
+issue pour proposer une nouvelle source d'information ou en signalant
+un problème avec une ou plusieurs questions/réponses.
 
-This application is published under the EPL 2.0 license.
+* Soutenir l'écosystème Clojure(script)
+
+Si vous aimez Clojure(script), vous pouvez soutenir son écosystème en
+faisant un don à [[https://www.clojuriststogether.org][clojuriststogether.org]].
+
+* Licence
+
+2020 Bastien Guerry.
+
+Le code source de ce dépôt est publiée sous licence [[file:LICENSE][EPL 2.0]].
+
