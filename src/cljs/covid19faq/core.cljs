@@ -330,8 +330,7 @@
       [:div.column.is-1
        [:a.delete.is-medium
         {:title    "Effacer tous les filtres"
-         :on-click #(rfe/push-state
-                     :home nil {:query "" :sort "" :source ""})}]]]
+         :on-click #(rfe/push-state :home)}]]]
      [:br]
      (if (not-empty answer-id)
        (do (GET (str faq-covid-19-api-url "/hit")
@@ -369,9 +368,7 @@
   [["" :home]])
 
 (defn on-navigate [match]
-  (let [target-page (:name (:data match))
-        params      (:query-params match)]
-    (re-frame/dispatch [:view! (keyword target-page) params])))
+  (re-frame/dispatch [:view! :home (:query-params match)]))
 
 (defn ^:export init []
   (re-frame/clear-subscription-cache!)
