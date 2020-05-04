@@ -18,7 +18,7 @@
 (defonce how-many-questions 15)
 (defonce minimum-search-string-size 3)
 
-(defonce faq-covid-19-api-url "http://localhost:3000")
+(defonce faq-covid-19-api-url "https://api.covid19-faq.fr")
 (defonce faq-covid-19-data-url "https://bzg.github.io/covid19-faq-data/")
 (defonce faq-covid-19-questions "faq-questions.json")
 (defonce faq-covid-19-answers-dir "answers/")
