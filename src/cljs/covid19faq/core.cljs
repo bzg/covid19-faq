@@ -88,9 +88,6 @@
 (defn apply-filter [m]
   (let [{:keys [sorting query source]}
         @(re-frame/subscribe [:filter?])
-        ;; s   (:sort f)
-        ;; q   (:query f)
-        ;; src (:source f)
         p (str "(?i).*(" (s/join ".*" (s/split query #"\s+")) ").*")]
     (if (not-empty query)
       (filter #(and (if (not-empty source) (= source (:s %)) true))
@@ -110,11 +107,13 @@
                                          question (last match)
                                          (str "<b>" (last match) "</b>"))))))
                         %)))))
-      (take how-many-questions
-            (condp = source
-              "note" (reverse (sort-by :n m))
-              "hits" (reverse (sort-by :h m))
-              (shuffle m))))))
+      (let [mm (condp = source
+                 "note" (reverse (sort-by :n m))
+                 "hits" (reverse (sort-by :h m))
+                 (shuffle m))]
+        (if (or (not-empty source) (not-empty sorting))
+          mm
+          (take how-many-questions mm))))))
 
 (re-frame/reg-sub
  :filtered-faq?
