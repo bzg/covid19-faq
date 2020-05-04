@@ -15,7 +15,7 @@
             [cljsjs.clipboard]))
 
 (defonce timeout 150)
-(defonce how-many-questions 12)
+(defonce how-many-questions 15)
 (defonce minimum-search-string-size 3)
 
 (defonce faq-covid-19-api-url "http://localhost:3000")
@@ -27,7 +27,7 @@
 (def stats (atom nil))
 (def noted (atom {}))
 
-(def init-filter  {:query "" :source "" :sort "" :faq ""})
+(def init-filter  {:query "" :source "" :sorting "" :faq ""})
 (def global-filter (reagent/atom init-filter))
 
 (defn set-focus-on-search []
@@ -86,31 +86,35 @@
  (fn [db _] (:faqs db)))
 
 (defn apply-filter [m]
-  (let [{:keys [sort query source]}
+  (let [{:keys [sorting query source]}
         @(re-frame/subscribe [:filter?])
-        p  (str "(?i).*(" (s/join ".*" (s/split query #"\s+")) ").*")
-        f0 (filter #(and (if (not-empty source) (= source (:s %)) true))
-                   (sort-by
-                    :x
-                    (->> m
-                         (map
-                          #(if (not-empty query)
-                             (let [question      (:q %)
-                                   match-against (str (:q %))]
-                               (when-let [match (re-matches (re-pattern p) match-against)]
-                                 (let [matched (last match)
-                                       idx     (s/index-of question matched)]
-                                   (assoc %
-                                          :x idx
-                                          :q (s/replace
-                                              question (last match)
-                                              (str "<b>" (last match) "</b>"))))))
-                             %)))))]
-    (take how-many-questions
-          (condp = sort
-            "note" (reverse (sort-by :n f0))
-            "hits" (reverse (sort-by :h f0))
-            (shuffle f0)))))
+        ;; s   (:sort f)
+        ;; q   (:query f)
+        ;; src (:source f)
+        p (str "(?i).*(" (s/join ".*" (s/split query #"\s+")) ").*")]
+    (if (not-empty query)
+      (filter #(and (if (not-empty source) (= source (:s %)) true))
+              (sort-by
+               :x
+               (->> m
+                    (map
+                     #(if (not-empty query)
+                        (let [question      (:q %)
+                              match-against (str (:q %))]
+                          (when-let [match (re-matches (re-pattern p) match-against)]
+                            (let [matched (last match)
+                                  idx     (s/index-of question matched)]
+                              (assoc %
+                                     :x idx
+                                     :q (s/replace
+                                         question (last match)
+                                         (str "<b>" (last match) "</b>"))))))
+                        %)))))
+      (take how-many-questions
+            (condp = source
+              "note" (reverse (sort-by :n m))
+              "hits" (reverse (sort-by :h m))
+              (shuffle m))))))
 
 (re-frame/reg-sub
  :filtered-faq?
@@ -129,7 +133,7 @@
               (when-let [s (not-empty
                             (:source @global-filter))] {:source s})
               (when-let [o (not-empty
-                            (:sort @global-filter))] {:sort o})))
+                            (:sorting @global-filter))] {:sorting o})))
       (recur (async/<! filter-chan)))))
 
 (defn display-questions []
@@ -302,9 +306,9 @@
     :on-change (fn [e]
                  (let [ev (.-value (.-target e))]
                    (set-focus-on-search)
-                   (swap! global-filter merge {:query "" :sort ev})
+                   (swap! global-filter merge {:query "" :sorting ev})
                    (async/go
-                     (async/>! filter-chan {:query "" :sort ev}))))}
+                     (async/>! filter-chan {:query "" :sorting ev}))))}
    [:option {:value ""} "Au hasard"]
    [:option {:value "note"} "Les mieux notées"]
    [:option {:value "hits"} "Les plus consultées"]])
@@ -312,7 +316,7 @@
 (defn main-page []
   (let [filter    @(re-frame/subscribe [:filter?])
         answer-id (:faq filter)
-        sort-type (:sort filter)]
+        sort-type (:sorting filter)]
     [:div
      [:div.columns.is-vcentered
       [:input.input.column.is-6
