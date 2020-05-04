@@ -25,9 +25,25 @@
 
 (def token (atom nil))
 (def stats (atom nil))
+(def noted (atom {}))
 
 (def init-filter  {:query "" :source "" :sort "" :faq ""})
 (def global-filter (reagent/atom init-filter))
+
+(defn set-item!
+  "Set `key` in browser's localStorage to `val`."
+  [key val]
+  (.setItem (.-localStorage js/window) key (.stringify js/JSON (clj->js val))))
+
+(defn get-item
+  "Return the value of `key` from browser's localStorage."
+  [key]
+  (js->clj (.parse js/JSON (.getItem (.-localStorage js/window) key))))
+
+(defn remove-item!
+  "Remove the browser's localStorage value for the given `key`."
+  [key]
+  (.removeItem (.-localStorage js/window) key))
 
 (re-frame/reg-event-db
  :initialize-db!
@@ -183,7 +199,9 @@
      [:div.column.has-text-centered.is-3
       [:a.button.is-fullwidth.is-info.is-light.is-size-5
        {:title    "Lire d'autres questions de cette source"
-        :on-click #(rfe/push-state :home nil {:source s})}
+        :on-click #(rfe/push-state
+                    :home nil
+                    (merge @global-filter {:faq "" :source s}))}
        "Questions de cette source"]]
      [:div.column.has-text-centered.is-2
       [:a.button.is-fullwidth.is-warning.is-light.is-size-5
@@ -194,22 +212,39 @@
 
 (defn send-note [id note]
   (GET (str faq-covid-19-api-url "/note")
-       {:format        :json
-        :params        {:id    id
-                        :token @token
-                        :note  note}
-        :handler       (fn [r] (prn r))
-        :error-handler (fn [r] (prn r))}))
+       {:format :json
+        :params {:id    id
+                 :token @token
+                 :note  note}
+        :handler
+        (fn [r] (condp = (:response (walk/keywordize-keys r))
+                  "OK" (do (swap! noted conj {id note})
+                           (set-item! :noted @noted))
+                  (prn "Error while sending the note")))
+        :error-handler
+        (fn [r] (prn (:response (walk/keywordize-keys r))))}))
 
-(defn display-call-to-note [id]
-  [:div.column
-   [:a.button.is-medium.is-rounded
-    {:title    "Ça m'a été utile !"
-     :on-click #(send-note id "1")} "👍"]
-   " "
-   [:a.button.is-medium.is-rounded
-    {:title    "Ça ne m'a pas été utile..."
-     :on-click #(send-note id "-1")} "👎"]])
+(defn display-call-to-note [id & [inactive?]]
+  (let [ok    "🙂"
+        notok "🤔"
+        space "   "]
+    (if inactive?
+      [:div.column.has-text-centered
+       [:a.is-size-3
+        {:title "Mon appréciation précédente"}
+        (if (= "1" (get (get-item :noted) id)) ok notok)]
+       space
+       [:a.is-size-3
+        {:title    "Je veux revoter !"
+         :on-click #(swap! noted dissoc id)} "🚮"]]
+      [:div.column.has-text-centered
+       [:a.is-size-3
+        {:title    "Ça m'a été utile !"
+         :on-click #(send-note id "1")} ok]
+       space
+       [:a.is-size-3
+        {:title    "Ça ne m'a pas été utile..."
+         :on-click #(send-note id "-1")} notok]])))
 
 (defn display-answer [id]
   (let [answer (reagent/atom {})
@@ -231,7 +266,9 @@
          [:div.column.is-multiline.is-9
           [:p [:strong.is-size-4
                {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
-         (display-call-to-note id)]
+         (if (contains? @noted id)
+           (display-call-to-note id "inactive")
+           (display-call-to-note id))]
         [:br]
         [:div.content {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
         [:br]]
