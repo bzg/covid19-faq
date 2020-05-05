@@ -17,7 +17,8 @@
 (defonce dev? false)
 
 (defonce timeout 150)
-(defonce how-many-questions 12)
+(defonce number-of-random-questions 12)
+(defonce number-of-sorted-questions 100)
 (defonce minimum-search-string-size 3)
 
 (defonce faq-covid-19-api-url
@@ -98,12 +99,12 @@
              :x idx
              :q (s/replace q matched (str "<b>" matched "</b>"))))))
 
-(defn apply-sorting [{:keys [sorting query]} m]
+(defn apply-sorting [{:keys [sorting query source]} m]
   (condp = sorting
-    "note" (reverse (sort-by :n m))
-    "hits" (reverse (sort-by :h m))
-    (if-not (not-empty query)
-      (take how-many-questions (shuffle m))
+    "note" (take number-of-sorted-questions (reverse (sort-by :n m)))
+    "hits" (take number-of-sorted-questions (reverse (sort-by :h m)))
+    (if (and (empty? query) (empty? source))
+      (take number-of-random-questions (shuffle m))
       m)))
 
 (defn apply-filter [m]
