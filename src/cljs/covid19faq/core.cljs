@@ -14,7 +14,7 @@
             [reitit.frontend.easy :as rfe]
             [cljsjs.clipboard]))
 
-(defonce dev? false)
+(defonce dev? true)
 
 (defonce timeout 150)
 (defonce number-of-random-questions 12)
@@ -142,7 +142,7 @@
   (let [questions (remove nil? @(re-frame/subscribe [:filtered-faq?]))]
     (if (seq questions)
       [:div.table-container
-       [:table.table.is-hoverable.is-fullwidth.is-striped
+       [:table.table.is-hoverable.is-fullwidth
         [:tbody
          (for [question questions
                :let     [id (:i question)
@@ -171,7 +171,7 @@
          (reset! clipboard-atom nil))
       :reagent-render
       (fn []
-        [:a.button.is-fullwidth.is-light.is-size-5
+        [:a.button.is-fullwidth.is-size-5
          {:title                 "Copier dans le presse papier"
           :data-clipboard-target target}
          label])})))
@@ -199,26 +199,18 @@
                              "\nSource officielle : " u
                              "\nEnvoyé depuis : " url)
                         #"[\n\t]" "%0D%0A%0D%0A")))]
-    [:div.columns
-     [:div.column.is-6
-      [:a.button.is-fullwidth.is-success.is-light.is-size-5
+    [:div.tile.is-ancestor
+     [:div.tile.is-parent
+      [:a.button.is-success.is-fullwidth.is-light.is-size-5
        {:target "new"
         :title  (when m (str "Réponse en date du " (subs m 0 10)
                              " - cliquez pour consulter la source"))
-        :href   u} (str "Source: " short-s)]]
-     [:div.column.has-text-centered.is-3
-      [:a.button.is-fullwidth.is-info.is-light.is-size-5
-       {:title    "Lire d'autres questions de cette source"
-        :on-click #(rfe/push-state
-                    :home nil
-                    (clean-state
-                     (merge @global-filter {:faq "" :source s})))}
-       "Questions de cette source"]]
-     [:div.column.has-text-centered.is-2
-      [:a.button.is-fullwidth.is-warning.is-light.is-size-5
+        :href   u} short-s]]
+     [:div.tile.is-parent.has-text-centered.is-1
+      [:a.button.is-fullwidth.is-size-5
        {:title "Envoyer la question et la réponse par email"
         :href  e-str} "📩"]]
-     [:div.column.has-text-centered.is-1
+     [:div.tile.is-parent.has-text-centered.is-1
       [clipboard-button "📋" "#copy-this"]]]))
 
 (defn send-note [id note]
@@ -237,24 +229,21 @@
         (fn [r] (prn (:response (walk/keywordize-keys r))))}))
 
 (defn display-call-to-note [id & [inactive?]]
-  (let [ok    "🙂"
-        notok "🤔"
+  (let [ok    [:span.icon [:i.far.fa-2x.fa-smile]]
+        notok [:span.icon [:i.far.fa-2x.fa-angry]]
         space "   "]
     (if inactive?
-      [:div.column.has-text-centered
-       [:a.is-size-3
-        {:title "Mon appréciation précédente"}
+      [:div.tile.is-parent
+       [:a.tile {:title "Mon appréciation précédente"}
         (if (= "1" (get (get-item :noted) id)) ok notok)]
-       space
-       [:a.is-size-3
-        {:title    "Je veux revoter !"
-         :on-click #(swap! noted dissoc id)} "🚮"]]
-      [:div.column.has-text-centered
-       [:a.is-size-3
+       [:a.tile {:title    "Je veux revoter !"
+                 :on-click #(swap! noted dissoc id)}
+        [:span.icon [:i.fas.fa-undo]]]]
+      [:div.tile.is-parent
+       [:a.tile.is-parent
         {:title    "Ça m'a été utile !"
          :on-click #(send-note id "1")} ok]
-       space
-       [:a.is-size-3
+       [:a.tile.is-parent
         {:title    "Ça ne m'a pas été utile..."
          :on-click #(send-note id "-1")} notok]])))
 
@@ -279,42 +268,45 @@
          [:div.column.is-multiline.is-9
           [:p [:strong.is-size-4
                {:dangerouslySetInnerHTML {:__html (:q @answer)}}]]]
-         (if (contains? @noted id)
-           (display-call-to-note id "inactive")
-           (display-call-to-note id))]
+         [:div.column.is-2
+          (if (contains? @noted id)
+            (display-call-to-note id "inactive")
+            (display-call-to-note id))]]
         [:br]
         [:div.content {:dangerouslySetInnerHTML {:__html (:r @answer)}}]
         [:br]]
        (if-let [a @answer] [bottom-links a] [:br])])))
 
 (defn faq-sources-select []
-  [:select.select
-   {:value     (or (:source @(re-frame/subscribe [:filter?])) "")
-    :tabIndex  0
-    :on-change (fn [e]
-                 (let [ev (.-value (.-target e))]
-                   (set-focus-on-search)
-                   (swap! global-filter merge {:query "" :source ev})
-                   (async/go
-                     (async/>! filter-chan {:query "" :source ev}))))}
-   (for [s (distinct (map :s @(re-frame/subscribe [:faqs?])))]
-     ^{:key (random-uuid)}
-     [:option {:value s} (shorten-source-name s)])
-   [:option {:value ""} "Toutes les questions"]])
+  [:div.select
+   [:select
+    {:value     (or (:source @(re-frame/subscribe [:filter?])) "")
+     :tabIndex  0
+     :on-change (fn [e]
+                  (let [ev (.-value (.-target e))]
+                    (set-focus-on-search)
+                    (swap! global-filter merge {:query "" :source ev})
+                    (async/go
+                      (async/>! filter-chan {:query "" :source ev}))))}
+    (for [s (distinct (map :s @(re-frame/subscribe [:faqs?])))]
+      ^{:key (random-uuid)}
+      [:option {:value s} (shorten-source-name s)])
+    [:option {:value ""} "Toutes les questions"]]])
 
 (defn faq-sort-select [sort-type]
-  [:select.select
-   {:value     sort-type
-    :tabIndex  0
-    :on-change (fn [e]
-                 (let [ev (.-value (.-target e))]
-                   (set-focus-on-search)
-                   (swap! global-filter merge {:query "" :sorting ev})
-                   (async/go
-                     (async/>! filter-chan {:query "" :sorting ev}))))}
-   [:option {:value ""} "Au hasard"]
-   [:option {:value "note"} "Les mieux notées"]
-   [:option {:value "hits"} "Les plus consultées"]])
+  [:div.select
+   [:select
+    {:value     sort-type
+     :tabIndex  0
+     :on-change (fn [e]
+                  (let [ev (.-value (.-target e))]
+                    (set-focus-on-search)
+                    (swap! global-filter merge {:query "" :sorting ev})
+                    (async/go
+                      (async/>! filter-chan {:query "" :sorting ev}))))}
+    [:option {:value ""} "Au hasard"]
+    [:option {:value "note"} "Les mieux notées"]
+    [:option {:value "hits"} "Les plus consultées"]]])
 
 (defn main-page []
   (let [filter    @(re-frame/subscribe [:filter?])
