@@ -14,7 +14,7 @@
             [reitit.frontend.easy :as rfe]
             [cljsjs.clipboard]))
 
-(defonce dev? true)
+(defonce dev? false)
 
 (defonce timeout 150)
 (defonce number-of-random-questions 12)
