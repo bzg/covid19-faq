@@ -288,10 +288,10 @@
                     (swap! global-filter merge {:query "" :source ev})
                     (async/go
                       (async/>! filter-chan {:query "" :source ev}))))}
+    [:option {:value ""} "Toutes les questions"]
     (for [s (distinct (map :s @(re-frame/subscribe [:faqs?])))]
       ^{:key (random-uuid)}
-      [:option {:value s} (shorten-source-name s)])
-    [:option {:value ""} "Toutes les questions"]]])
+      [:option {:value s} (shorten-source-name s)])]])
 
 (defn faq-sort-select [sort-type]
   [:div.select
