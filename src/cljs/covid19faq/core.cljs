@@ -14,12 +14,17 @@
             [reitit.frontend.easy :as rfe]
             [cljsjs.clipboard]))
 
+(defonce dev? false)
+
 (defonce timeout 150)
-(defonce how-many-questions 15)
+(defonce how-many-questions 12)
 (defonce minimum-search-string-size 3)
 
-(defonce faq-covid-19-api-url "https://api.covid19-faq.fr")
-;; (defonce faq-covid-19-api-url "http://localhost:3000")
+(defonce faq-covid-19-api-url
+  (if dev?
+    "http://localhost:3000"
+    "https://api.covid19-faq.fr"))
+
 (defonce faq-covid-19-data-url "https://bzg.github.io/covid19-faq-data/")
 (defonce faq-covid-19-questions "faq-questions.json")
 (defonce faq-covid-19-answers-dir "answers/")
@@ -86,35 +91,31 @@
  :faqs?
  (fn [db _] (:faqs db)))
 
+(defn add-match-index [{:keys [q] :as item} pattern]
+  (when-let [matched (last (re-matches pattern q))]
+    (let [idx (s/index-of q matched)]
+      (assoc item
+             :x idx
+             :q (s/replace q matched (str "<b>" matched "</b>"))))))
+
+(defn apply-sorting [{:keys [sorting query]} m]
+  (condp = sorting
+    "note" (reverse (sort-by :n m))
+    "hits" (reverse (sort-by :h m))
+    (if-not (not-empty query)
+      (take how-many-questions (shuffle m))
+      m)))
+
 (defn apply-filter [m]
-  (let [{:keys [sorting query source]}
+  (let [{:keys [sorting query source] :as f}
         @(re-frame/subscribe [:filter?])
-        p (str "(?i).*(" (s/join ".*" (s/split query #"\s+")) ").*")]
-    (if (not-empty query)
-      (filter #(and (if (not-empty source) (= source (:s %)) true))
-              (sort-by
-               :x
-               (->> m
-                    (map
-                     #(if (not-empty query)
-                        (let [question      (:q %)
-                              match-against (str (:q %))]
-                          (when-let [match (re-matches (re-pattern p) match-against)]
-                            (let [matched (last match)
-                                  idx     (s/index-of question matched)]
-                              (assoc %
-                                     :x idx
-                                     :q (s/replace
-                                         question (last match)
-                                         (str "<b>" (last match) "</b>"))))))
-                        %)))))
-      (let [mm (condp = source
-                 "note" (reverse (sort-by :n m))
-                 "hits" (reverse (sort-by :h m))
-                 (shuffle m))]
-        (if (or (not-empty source) (not-empty sorting))
-          mm
-          (take how-many-questions mm))))))
+        p (re-pattern
+           (str "(?i).*(" (s/join ".*" (s/split query #"\s+")) ").*"))]
+    (->> (if (not-empty query)
+           (sort-by :x (map #(add-match-index % p) m))
+           m)
+         (filter #(if (not-empty source) (= source (:s %)) identity))
+         (apply-sorting f))))
 
 (re-frame/reg-sub
  :filtered-faq?
