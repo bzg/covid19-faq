@@ -110,8 +110,14 @@
 (defn apply-filter [m]
   (let [{:keys [sorting query source] :as f}
         @(re-frame/subscribe [:filter?])
+        q (-> query
+              (s/replace #"(?i)e" "[éèëêe]")
+              (s/replace #"(?i)a" "[æàâa]")
+              (s/replace #"(?i)o" "[œöôo]")
+              (s/replace #"(?i)c" "[çc]")
+              (s/replace #"(?i)u" "[ûùu]"))
         p (re-pattern
-           (str "(?i).*(" (s/join ".*" (s/split query #"\s+")) ").*"))]
+           (str "(?i).*(" (s/join ".*" (s/split q #"\s+")) ").*"))]
     (->> (if (not-empty query)
            (sort-by :x (map #(add-match-index % p) m))
            m)
