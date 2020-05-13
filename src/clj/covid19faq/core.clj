@@ -4,7 +4,7 @@
 (def index-meta
   {:index-title "FAQ Covid-19 - Questions et réponses de l'administration publique"
    :title       "FAQ Covid-19"
-   :subtitle    "Les questions et réponses de l'administration publique."
+   :subtitle    "Les questions et réponses de l'administration publique.\nInitiative non-officielle - référez-vous aux sites officiels en cas de doute"
    :keywords    "Covid-19 coronavirus questions réponses administration publique"
    :description "FAQ Covid-19 - Questions et réponses de l'administration publique"
    :base-url    "/"
