@@ -16,6 +16,7 @@ plusieurs organismes publics :
 - sfpt-fr.org
 - defense.gouv.fr
 - economie.gouv.fr
+- service-public.fr
 
 Le code source pour la collecte de ces questions/réponses et leur mise
 à disposition sous forme d'API est lisible [[https://github.com/bzg/covid19-faq-data][sur ce dépôt]].
