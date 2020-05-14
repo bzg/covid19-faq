@@ -5,7 +5,7 @@
 (ns covid19faq.core
   (:require [cljs.core.async :as async]
             [clojure.string :as s]
-            [ajax.core :refer [GET]]
+            [ajax.core :refer [GET POST]]
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]
             [reagent.dom]
@@ -220,19 +220,16 @@
       [clipboard-button "📋" "#copy-this"]]]))
 
 (defn send-note [id note]
-  (GET (str faq-covid-19-api-url "/note")
-       {:format :json
-        :params {:id    id
-                 :token @token
-                 :note  note}
-        :handler
-        (fn [r] (condp = (:response (walk/keywordize-keys r))
-                  "OK" (do (swap! noted conj {id note})
-                           (set-item! :noted @noted)
-                           (println "Note stored"))
-                  (println "Error while sending the note")))
-        :error-handler
-        (fn [r] (prn (:response (walk/keywordize-keys r))))}))
+  (POST (str faq-covid-19-api-url "/note")
+        {:params {:id id :token @token :note note}
+         :handler
+         (fn [r] (condp = (:response (walk/keywordize-keys r))
+                   "OK" (do (swap! noted conj {id note})
+                            (set-item! :noted @noted)
+                            (println "Note stored"))
+                   (println "Error while sending the note")))
+         :error-handler
+         (fn [r] (prn (:response (walk/keywordize-keys r))))}))
 
 (defn display-call-to-note [id & [inactive?]]
   (let [ok    [:span.icon [:i.far.fa-2x.fa-smile]]
@@ -357,8 +354,8 @@
 (defn faq-with-stats [m]
   (map
    (fn [{:keys [i] :as faq}]
-     (merge faq {:h (get-in @stats [(keyword i) :hits])
-                 :n (get-in @stats [(keyword i) :note :mean])}))
+     (merge faq {:h (get-in @stats [(keyword i) :h]) ;; :hits
+                 :n (get-in @stats [(keyword i) :n :m])})) ;; :note :mean
    (walk/keywordize-keys m)))
 
 (defn main-class []
